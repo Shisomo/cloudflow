@@ -3,32 +3,53 @@ package cloudflow
 import (
 	"reflect"
 	"fmt"
+	"encoding/json"
+	"runtime"
+	"strings"
 )
 
 type Node struct {
-	Name     string
-	Func     interface{}
-	Flow     *Flow
-	Uuid     string
-	Idx      int
-	SubIdx   int
-	OutCh    string
-	PreNodes []*Node
-	NexNodes []*Node
-	KWArgs   []interface{}
-	Synchz   bool
-	InsCount int
+	Name     string        `json:"name"`
+	Func     interface{}   `json:"-"`
+	Flow     *Flow         `json:"-"`
+	Uuid     string        `json:"uuid"`
+	Idx      int           `json:"index"`
+	SubIdx   int           `json:"subidx"`
+	OutCh    string        `json:"outch"`
+	PreNodes []*Node       `json:"-"`
+	NexNodes []*Node       `json:"-"`
+	KWArgs   []interface{} `json:"-"`
+	Synchz   bool          `json:"synchz"`
+	InsCount int           `json:"inscount"`
+	CTime    int64         `json:"ctime"`
 }
+
+
+func (node *Node) MarshalJSON() ([]byte, error) {
+	type JNode Node
+	func_name := strings.Replace(reflect.ValueOf(node.Func).String(), "func(", 
+	                             runtime.FuncForPC(reflect.ValueOf(node.Func).Pointer()).Name()+"(", 1)
+	return json.Marshal(&struct{
+		*JNode
+		Func string `json:"func"`
+	}{
+		JNode: (*JNode)(node),
+		Func: func_name,
+	})
+}
+
 
 func (node *Node) String() string {
 	return fmt.Sprintf("Node(%s, %s)", node.Uuid, node.Name)
 }
+
 
 var __node_index__ int = 0
 func NewNode(flow *Flow, kw... map[string]interface{}) *Node{
 	var node = Node{
 		Idx: __node_index__,
 		Flow: flow,
+		CTime: Timestamp(),
 	}
 	__node_index__ += 1
 	node.Update(kw...)
@@ -44,12 +65,14 @@ func (node *Node)Update(kw... map[string]interface{}){
 			if v.CanSet() {
 				v.Set(reflect.ValueOf(value))
 			} else {
-				Err("Set Node.%s with value: %s fail", key, value)
+				Err("Set Node fail:", "k=", key, "v=", value)
 			}
 		}
 	}
-	identies := node.Name + Itos(node.Idx) + "-" + Itos(node.SubIdx) + "-" + node.Flow.Uuid
-	node.Uuid = AsMd5(identies)
+	outch     := node.Flow.Uuid + "." + Itos(node.Idx) + "." + node.Name
+	node.OutCh = outch
+	identies  := outch + "." + Itos(node.SubIdx)
+	node.Uuid  = AsMd5(identies)
 }
 
 

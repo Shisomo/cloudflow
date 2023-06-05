@@ -12,5 +12,9 @@ func Log(args...interface{}){
 }
 
 func Err(args...interface{}){
-	log.Println(args...)
+	log.Fatalln(args...)
+}
+
+func Errf(f string, args...interface{}){
+	log.Fatalf(f, args...)
 }

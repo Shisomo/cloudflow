@@ -5,11 +5,12 @@ import (
 )
 
 type Flow struct {
-	Name  string
-	Uuid  string
-	Sess  *Session
-	Nodes []*Node
-	Idx   int
+	Name  string    `json:"name"`
+	Uuid  string    `json:"uuid"`
+	Sess  *Session  `json:"-"`
+	Nodes []*Node   `json:"nodes"`
+	Idx   int       `json:"index"`
+	CTime int64     `json:"ctime"`
 }
 
 var __flow_index__ int = 0
@@ -19,10 +20,14 @@ func NewFlow(se *Session, name string) *Flow{
 		Uuid: AsMd5(se.Uuid + Itos(__flow_index__)),
 		Sess: se,
 		Idx:  __flow_index__,
+		CTime: Timestamp(),
+		Nodes: []*Node{},
 	}
 	__flow_index__ += 1
+	se.Flows = append(se.Flows, &flow)
 	return &flow
 }
+
 
 func (f *Flow) String() string{
 	return fmt.Sprintf("Fow(%s, %s)", f.Uuid, f.Name)
@@ -45,15 +50,3 @@ func (flow *Flow )Add(fc interface{}, name string, kwargs... interface{}) *Node{
 func (flow *Flow) AddNode(node *Node) {
 	flow.Nodes = append(flow.Nodes, node)
 }
-
-
-func (flow *Flow)DrawTxt() string{
-	node_count := len(flow.Nodes)
-	fmt_str := fmt.Sprintf("\n%s size=%d: \nNodes:\n", flow, node_count)
-	for index, node := range flow.Nodes {
-		node_fmt := If(index < node_count -1, "  %s\n", "  %s").(string)
-		fmt_str += fmt.Sprintf(node_fmt, node)
-	}
-	return fmt_str
-}
-
