@@ -1,11 +1,16 @@
-#
-# default configuration
-#
-
-cloudflow:
--host: 127.0.0.1
--port: 8888
--runtime:
-  -imp: RawNode
--web:
- -port: 8887
+# configuration
+cf:
+ services:
+  state:
+    imp: etcd
+    host: 127.0.0.1
+    port: 2379
+    scope: default
+  fstore:
+    imp: local
+  kvstore:
+    imp: redis
+  message:
+    imp: nats
+exeuter:
+  imp: default

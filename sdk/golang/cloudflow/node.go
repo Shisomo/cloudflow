@@ -22,6 +22,7 @@ type Node struct {
 	Synchz   bool          `json:"synchz"`
 	InsCount int           `json:"inscount"`
 	CTime    int64         `json:"ctime"`
+	ATime    int64         `json:"atime"`
 }
 
 

@@ -20,6 +20,7 @@ type Service struct {
 	KWArgs   []interface{} `json:"-"`
 	InsCount int           `json:"inscount"`
 	CTime    int64         `json:"ctime"`
+	ATime    int64         `json:"atime"`
 }
 
 func (srv *Service) MarshalJSON() ([]byte, error) {

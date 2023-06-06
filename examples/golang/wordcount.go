@@ -1,8 +1,7 @@
-
 package main
 
 import (
-	cf "../../sdk/golang/cloudflow"
+	cf "cloudflow/sdk/golang/cloudflow"
 )
 
 func statistics(app *cf.App) map[string]int{

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"./cmds"
+	"cloudflow/cli"
 )
 
 func main(){
-	cmds.Test()
+	cli.Main()
 }

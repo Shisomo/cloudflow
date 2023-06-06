@@ -71,69 +71,18 @@ func (app *App)ExportJson() string{
 }
 
 
-func (app *App)ExportConfigJson() string{
+func (app *App)ExportConfigJson() (string, string){
 	var appdata map[string]interface{}
 	cfgjson := app.ExportJson()
 	json.Unmarshal([]byte(cfgjson), &appdata)
 
 	var exportJS = make(map[string]interface{})
 	prefix := CfgKeyPrefix() + app.Uuid
-	
-	list_sess := []interface{}{}
-	list_flow := []interface{}{}
-	list_node := []interface{}{}
+	exportJS[prefix+".rawcfg"] = Base64En(cfgjson)
+	exportJS[prefix+".sdkv"] = Version()
+	DumpKV(&appdata, &exportJS, prefix, "uuid")
 
-	// DGA
-	sessions := appdata["sess"]
-	if sessions != nil{
-		ses_idx := []string{}
-		for _, ve := range sessions.([]interface{}) {
-			ve := ve.(map[string]interface{})
-			flw_idx := []string{}
-			ses_idx   = append(ses_idx, ve["uuid"].(string))
-			for _, vl := range ve["flows"].([]interface{}) {
-				vl := vl.(map[string]interface{})
-				nds_idx := []string{}
-				flw_idx = append(flw_idx, vl["uuid"].(string))
-				for _, vn := range vl["nodes"].([]interface{})  {
-					vn := vn.(map[string]interface{})
-					nds_idx = append(nds_idx, vn["uuid"].(string))
-					list_node = append(list_node, vn)
-				}
-				vl["nodes"] = nds_idx
-				list_flow = append(list_flow, vl)
-			}
-			ve["flows"] = flw_idx
-			list_sess = append(list_sess, ve)
-		}
-		appdata["sess"] = ses_idx
-	}
-	// Services
-	list_serv := appdata["srvs"]
-	if list_serv != nil {
-		srv_idx := []string{}
-		for _, s := range list_serv.([]interface{}) {
-			srv_idx = append(srv_idx, s.(map[string]interface{})["uuid"].(string))
-		}
-		appdata["srvs"] = srv_idx
-	}
-	exportJS[prefix+".app"] = appdata
-	exportJS[prefix+".cfg"] = cfgjson
-	submodes := map[string]interface{} {
-		".se": list_sess,
-		".fw": list_flow,
-		".nd": list_node,
-		".sv": list_serv,
-	}
-	for k, v := range submodes {
-		for _, data := range v.([]interface{}) {
-			data := data.(map[string]interface{})
-			exportJS[prefix + "." + data["uuid"].(string) + k] = data
-		}
-	}
-	cfg, err := json.MarshalIndent(&exportJS, "", " ")
-	Assert(err == nil, "Marshal error")
-	return string(cfg)
+	return prefix, AsJson(&exportJS)
 }
 
 
