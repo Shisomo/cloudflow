@@ -1,86 +1,80 @@
 package cloudflow
 
 import (
+	"bytes"
 	"crypto/md5"
-	"encoding/hex"
-	"time"
-	"strconv"
-	"os"
-	"runtime"
-	"fmt"
-	"reflect"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"net"
+	"os"
+	"os/exec"
+	"reflect"
+	"runtime"
+	"strconv"
 	"strings"
+	"time"
 )
-
 
 func Version() string {
 	return "0.01"
 }
 
-
 func TextIcon() string {
 	return ""
 }
 
-
-func AsMd5(str string) string{
+func AsMd5(str string) string {
 	var h = md5.New()
 	h.Write([]byte(str))
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-
-func If(a bool, b, c interface{}) interface{}{
+func If(a bool, b, c interface{}) interface{} {
 	if a {
 		return b
 	}
 	return c
 }
 
-
 func Timestamp() int64 {
 	return time.Now().UnixNano()
 }
-
 
 func TimestampStr() string {
 	return strconv.FormatInt(Timestamp(), 10)
 }
 
-
 func Itos(a int) string {
 	return strconv.Itoa(a)
 }
 
-
-func I64tos(a int64) string{
+func I64tos(a int64) string {
 	return strconv.FormatInt(a, 10)
 }
-
 
 func Env(name string) string {
 	return os.Getenv(name)
 }
 
-
-func EnvAPPUuid() string{
+func EnvAPPUuid() string {
 	return Env("CF_APP_UUID")
 }
 
+func EnvNodeUuid() string {
+	return Env("CF_NODE_UUID")
+}
 
-func EnvAPPHost() string{
+func EnvAPPHost() string {
 	return Env("CF_APP_HOST")
 }
 
-
-func EnvAPPPort() string{
+func EnvAPPPort() string {
 	return Env("CF_APP_PORT")
 }
 
-
-func Assert(val bool, f string, msg... interface{}) {
+func Assert(val bool, f string, msg ...interface{}) {
 	if !val {
 		_, path, line, _ := runtime.Caller(1)
 		msg_txt := fmt.Sprintf(f, msg...)
@@ -88,13 +82,11 @@ func Assert(val bool, f string, msg... interface{}) {
 	}
 }
 
-
 func CfgKeyPrefix() string {
 	return "cfapp."
 }
 
-
-func DumpKV(data * map[string]interface{}, result * map[string]interface{}, prefix string, lkey string){
+func DumpKV(data *map[string]interface{}, result *map[string]interface{}, prefix string, lkey string) {
 	for k, v := range *data {
 		npref := prefix + "." + k
 		switch reflect.TypeOf(v).Kind() {
@@ -106,11 +98,11 @@ func DumpKV(data * map[string]interface{}, result * map[string]interface{}, pref
 		case reflect.Slice, reflect.Array:
 			v := v.([]interface{})
 			klist := []string{}
-			for _, itm:= range v {
+			for _, itm := range v {
 				itm := itm.(map[string]interface{})
 				uuid := itm[lkey].(string)
 				klist = append(klist, uuid)
-				DumpKV(&itm, result, k + "." + uuid, lkey)
+				DumpKV(&itm, result, k+"."+uuid, lkey)
 			}
 			(*result)[npref] = klist
 		default:
@@ -125,18 +117,25 @@ func AsJson(data interface{}) string {
 	return string(js)
 }
 
-func Base64En(msg string) string{
+func FrJson(data string) interface{} {
+	var v interface{}
+	err := json.Unmarshal([]byte(data), &v)
+	Assert(err == nil, "Unmarshal %s fail", data)
+	return v
+}
+
+func Base64En(msg string) string {
 	return base64.StdEncoding.EncodeToString([]byte(msg))
 }
 
-func Base64De(msg string) string{
+func Base64De(msg string) string {
 	decoded, err := base64.StdEncoding.DecodeString(msg)
-	Assert(err==nil, "Decode base64 error: %s", err)
+	Assert(err == nil, "Decode base64 error: %s", err)
 	return string(decoded)
 }
 
-func UpdateCfg(cfg *map[string]interface{}, n_cfg *map[string]interface{}){
-	for k, v := range (*n_cfg) {
+func UpdateCfg(cfg *map[string]interface{}, n_cfg *map[string]interface{}) {
+	for k, v := range *n_cfg {
 		a := (*cfg)[k]
 		switch reflect.TypeOf(v).Kind() {
 		case reflect.Map:
@@ -150,25 +149,69 @@ func UpdateCfg(cfg *map[string]interface{}, n_cfg *map[string]interface{}){
 	}
 }
 
-func SetCfg(cfg *map[string]interface{}, key string, value interface{}){
+func SetCfg(cfg *map[string]interface{}, key string, value interface{}) {
 	Assert(key != "", "key empty")
 	keys := strings.Split(key, ".")
 	keyl := len(keys)
-    for _, k := range keys[:keyl-1] {
+	for _, k := range keys[:keyl-1] {
 		v := (*cfg)[k].(map[string]interface{})
 		cfg = &v
 	}
 	(*cfg)[keys[keyl-1]] = value
 }
 
-
 func GetCfg(cfg *map[string]interface{}, key string) interface{} {
 	Assert(key != "", "key empty")
 	keys := strings.Split(key, ".")
 	keyl := len(keys)
-    for _, k := range keys[:keyl-1] {
+	for _, k := range keys[:keyl-1] {
 		v := (*cfg)[k].(map[string]interface{})
 		cfg = &v
 	}
 	return (*cfg)[keys[keyl-1]]
+}
+
+func NodeIP() []string {
+	addrs, err := net.InterfaceAddrs()
+	Assert(err == nil, "get interface address fail:%s", addrs)
+	ips := []string{}
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				ips = append(ips, ipnet.IP.String())
+			}
+		}
+	}
+	if len(ips) < 1 {
+		ips = append(ips, "localhost")
+	}
+	return ips
+}
+
+func NodeName() string {
+	return NodeIP()[0] + "-" + Itos(os.Getpid())
+}
+
+func AddPrefix(input []string, pre string) []string {
+	new := []string{}
+	for _, v := range input {
+		new = append(new, pre+v)
+	}
+	return new
+}
+
+func ProcessPID(name string) int {
+	var out bytes.Buffer
+	_, err := exec.LookPath("pidof")
+	Assert(err == nil, "pidof not installed")
+	cmd := exec.Command("pidof", name)
+	cmd.Stdout = &out
+	cmd.Run()
+	val := strings.TrimSpace(out.String())
+	if len(val) < 1 {
+		return -1
+	}
+	v, er := strconv.ParseInt(val, 10, 0)
+	Assert(er == nil, "parse pid %s fail: %s", val, er)
+	return int(v)
 }

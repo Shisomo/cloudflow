@@ -12,5 +12,7 @@ cf:
     imp: redis
   message:
     imp: nats
-exeuter:
+    host: 127.0.0.1
+    port: 4222
+ exeuter:
   imp: default

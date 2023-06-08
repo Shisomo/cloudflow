@@ -2,20 +2,18 @@ package service
 
 import (
 	cf "cloudflow/sdk/golang/cloudflow"
+	kv "cloudflow/sdk/golang/cloudflow/kvops"
 )
 
 type StateOps interface {
 	ServiceOps
-	ClearAll()
-	Get(key string) interface{}
-	Set(key string) bool
+	kv.KVOp
 }
 
-
-func GetStateSvr(cfg map[string]interface{}) ServiceOps{
+func GetStateImp(cfg map[string]interface{}) ServiceOps {
 	imp := cfg["imp"].(string)
 	cf.Log("create state service with imp:", imp)
-	switch  imp {
+	switch imp {
 	case "etcd":
 		return NewStateEtcd(cfg)
 	default:

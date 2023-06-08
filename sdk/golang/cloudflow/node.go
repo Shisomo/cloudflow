@@ -1,9 +1,9 @@
 package cloudflow
 
 import (
-	"reflect"
-	"fmt"
 	"encoding/json"
+	"fmt"
+	"reflect"
 	"runtime"
 	"strings"
 )
@@ -25,31 +25,29 @@ type Node struct {
 	ATime    int64         `json:"atime"`
 }
 
-
 func (node *Node) MarshalJSON() ([]byte, error) {
 	type JNode Node
-	func_name := strings.Replace(reflect.ValueOf(node.Func).String(), "func(", 
-	                             runtime.FuncForPC(reflect.ValueOf(node.Func).Pointer()).Name()+"(", 1)
-	return json.Marshal(&struct{
+	func_name := strings.Replace(reflect.ValueOf(node.Func).String(), "func(",
+		runtime.FuncForPC(reflect.ValueOf(node.Func).Pointer()).Name()+"(", 1)
+	return json.Marshal(&struct {
 		*JNode
 		Func string `json:"func"`
 	}{
 		JNode: (*JNode)(node),
-		Func: func_name,
+		Func:  func_name,
 	})
 }
-
 
 func (node *Node) String() string {
 	return fmt.Sprintf("Node(%s, %s)", node.Uuid, node.Name)
 }
 
-
 var __node_index__ int = 0
-func NewNode(flow *Flow, kw... map[string]interface{}) *Node{
+
+func NewNode(flow *Flow, kw ...map[string]interface{}) *Node {
 	var node = Node{
-		Idx: __node_index__,
-		Flow: flow,
+		Idx:   __node_index__,
+		Flow:  flow,
 		CTime: Timestamp(),
 	}
 	__node_index__ += 1
@@ -57,10 +55,9 @@ func NewNode(flow *Flow, kw... map[string]interface{}) *Node{
 	return &node
 }
 
-
-func (node *Node)Update(kw... map[string]interface{}){
+func (node *Node) Update(kw ...map[string]interface{}) {
 	var node_rf = reflect.ValueOf(node)
-	for _, arg := range kw{
+	for _, arg := range kw {
 		for key, value := range arg {
 			v := node_rf.Elem().FieldByName(key)
 			if v.CanSet() {
@@ -70,14 +67,13 @@ func (node *Node)Update(kw... map[string]interface{}){
 			}
 		}
 	}
-	outch     := node.Flow.Uuid + "." + Itos(node.Idx) + "." + node.Name
+	outch := node.Flow.Uuid + "." + Itos(node.Idx) + "." + node.Name
 	node.OutCh = outch
-	identies  := outch + "." + Itos(node.SubIdx)
-	node.Uuid  = AsMd5(identies)
+	identies := outch + "." + Itos(node.SubIdx)
+	node.Uuid = AsMd5(identies)
 }
 
-
-func (node *Node)append(fc interface{}, name string, kwargs[]interface{}) *Node{
+func (node *Node) append(fc interface{}, name string, kwargs []interface{}) *Node {
 	var new_node = NewNode(node.Flow, map[string]interface{}{
 		"Name":     name,
 		"Func":     fc,
@@ -92,19 +88,16 @@ func (node *Node)append(fc interface{}, name string, kwargs[]interface{}) *Node{
 	return new_node
 }
 
-
-func (node *Node )Add(fc interface{}, name string, kwargs... interface{}) *Node{
+func (node *Node) Add(fc interface{}, name string, kwargs ...interface{}) *Node {
 	return node.append(fc, name, kwargs)
 }
 
-
-func (node *Node )Map(fc interface{}, name string, count int, kwargs... interface{}) *Node{
+func (node *Node) Map(fc interface{}, name string, count int, kwargs ...interface{}) *Node {
 	var new_node = node.append(fc, name, kwargs)
 	new_node.InsCount = count
 	return new_node
 }
 
-
-func (node *Node )Reduce(fc interface{}, name string, kwargs... interface{}) *Node{
+func (node *Node) Reduce(fc interface{}, name string, kwargs ...interface{}) *Node {
 	return node.append(fc, name, kwargs)
 }

@@ -4,6 +4,6 @@ import (
 	"cloudflow/cli"
 )
 
-func main(){
+func main() {
 	cli.Main()
 }

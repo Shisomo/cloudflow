@@ -1,14 +1,14 @@
 package cli
 
 import (
+	cf "cloudflow/sdk/golang/cloudflow"
+	"io/ioutil"
+	"os"
+	"os/user"
+
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
-	"os/user"
-	"os"
-	cf "cloudflow/sdk/golang/cloudflow"
 )
-
 
 var CMD_Config = &cobra.Command{
 	Use:   "config",
@@ -16,11 +16,10 @@ var CMD_Config = &cobra.Command{
 	Long:  "config is ...., long description",
 	Run: func(cmd *cobra.Command, args []string) {
 		cf.Log("run config", args)
-    },
+	},
 }
 
-
-func LoadCfg(file string) map[string]interface{}{
+func LoadCfg(file string) map[string]interface{} {
 	cuser, err := user.Current()
 	cf.Assert(err == nil, "Get current user fail: %s", err)
 	default_cfgs := []string{
@@ -30,8 +29,8 @@ func LoadCfg(file string) map[string]interface{}{
 		cuser.HomeDir + "/default.yaml",
 		"/etc/cloudflow/default.yaml",
 	}
-	if file == ""{
-		for _, f := range default_cfgs{
+	if file == "" {
+		for _, f := range default_cfgs {
 			_, r := os.Stat(f)
 			cf.Log("search config file:", f)
 			if r == nil {
@@ -47,7 +46,6 @@ func LoadCfg(file string) map[string]interface{}{
 	yaml.Unmarshal(data, &cfg_data)
 	return cfg_data
 }
-
 
 func GetAppCfg() map[string]interface{} {
 	cfg := LoadCfg(Cf_file)

@@ -1,8 +1,9 @@
 package cli
 
 import (
-	"github.com/spf13/cobra"
 	cf "cloudflow/sdk/golang/cloudflow"
+
+	"github.com/spf13/cobra"
 )
 
 var CMD_Worker = &cobra.Command{
@@ -11,6 +12,5 @@ var CMD_Worker = &cobra.Command{
 	Long:  "worker is ...., long description",
 	Run: func(cmd *cobra.Command, args []string) {
 		cf.Log("run worker", args)
-    },
+	},
 }
-
