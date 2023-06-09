@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"cloudflow/internal/schedule"
 	sr "cloudflow/internal/service"
 	cf "cloudflow/sdk/golang/cloudflow"
 )
@@ -19,12 +20,12 @@ func NewCloudFlow(cfg *map[string]interface{}) *CloudFlow {
 func (self *CloudFlow) StartService() {
 	cfg := self.cfg
 	cf.Log("start cf.state")
-	srv_state := sr.GetStateImp(cf.GetCfg(cfg, "cf.services.state").(map[string]interface{}))
+	srv_state := sr.GetStateImp(cf.GetCfgC(cfg, "cf.services.state"))
 	cf.Assert(srv_state.Restart(), "start cf.services fail")
 	self.StateSrv = srv_state.(sr.StateOps)
 
 	cf.Log("start cf.message")
-	srv_message := sr.GetMessageImp(cf.GetCfg(cfg, "cf.services.message").(map[string]interface{}))
+	srv_message := sr.GetMessageImp(cf.GetCfgC(cfg, "cf.services.message"))
 	cf.Assert(srv_message.Restart(), "start cf.message fail")
 
 	// start kv service
@@ -32,10 +33,12 @@ func (self *CloudFlow) StartService() {
 
 	// start file storage
 	cf.Log("Fake start kv service, FIXME")
-}
 
-func (self *CloudFlow) Schedule() {
-	cf.Log("Schedule FIXME")
+	// check scheduler, if no one, start dumy scheduler
+	schedule.TryStartSchduler(cf.GetCfgC(cfg, "cf.scheduler"), self.StateSrv)
+
+	// check worker, if no one, start dumy worker
+
 }
 
 func (self *CloudFlow) SubmitApp(app_id string, app_base64_cfg string, exec_file string, node_uuid string) {

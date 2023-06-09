@@ -25,12 +25,11 @@ var CMD_Run = &cobra.Command{
 		flow := it.NewCloudFlow(&cfg)
 		flow.StartService()
 		flow.SubmitApp(args[0], args[1], args[2], app_nodeid)
-		flow.Schedule()
 	},
 }
 
 func init() {
 	pflag := CMD_Run.PersistentFlags()
-	pflag.StringVarP(&app_scope, "scope", "s", "cl_default", "cf application scope")
+	pflag.StringVarP(&app_scope, "scope", "s", "cl", "cf application scope")
 	pflag.StringVar(&app_nodeid, "nid", "", "node.uuid of cf application")
 }

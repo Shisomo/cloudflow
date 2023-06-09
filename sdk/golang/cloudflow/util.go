@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net"
 	"os"
 	"os/exec"
@@ -15,6 +16,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/denisbrodbeck/machineid"
 )
 
 func Version() string {
@@ -92,9 +95,7 @@ func DumpKV(data *map[string]interface{}, result *map[string]interface{}, prefix
 		switch reflect.TypeOf(v).Kind() {
 		case reflect.Map:
 			v := v.(map[string]interface{})
-			sub_result := map[string]interface{}{}
-			DumpKV(&v, &sub_result, npref, lkey)
-			(*result)[npref] = sub_result
+			DumpKV(&v, data, k, lkey)
 		case reflect.Slice, reflect.Array:
 			v := v.([]interface{})
 			klist := []string{}
@@ -122,6 +123,17 @@ func FrJson(data string) interface{} {
 	err := json.Unmarshal([]byte(data), &v)
 	Assert(err == nil, "Unmarshal %s fail", data)
 	return v
+}
+
+func AsKV(data interface{}) map[string]interface{} {
+	return FrJson(AsJson(data)).(map[string]interface{})
+}
+
+func Dump(data interface{}, prefix string, lkey string) map[string]interface{} {
+	ret := map[string]interface{}{}
+	kv := AsKV(data)
+	DumpKV(&kv, &ret, prefix, lkey)
+	return ret
 }
 
 func Base64En(msg string) string {
@@ -171,6 +183,10 @@ func GetCfg(cfg *map[string]interface{}, key string) interface{} {
 	return (*cfg)[keys[keyl-1]]
 }
 
+func GetCfgC(cfg *map[string]interface{}, key string) map[string]interface{} {
+	return GetCfg(cfg, key).(map[string]interface{})
+}
+
 func NodeIP() []string {
 	addrs, err := net.InterfaceAddrs()
 	Assert(err == nil, "get interface address fail:%s", addrs)
@@ -188,8 +204,14 @@ func NodeIP() []string {
 	return ips
 }
 
-func NodeName() string {
-	return NodeIP()[0] + "-" + Itos(os.Getpid())
+func NodeID() string {
+	mid, err := machineid.ID()
+	Assert(err == nil, "get machineid fail: %s", mid)
+	return mid + "-" + NodeIP()[0]
+}
+
+func AppID() string {
+	return NodeID() + "-" + Itos(os.Getpid())
 }
 
 func AddPrefix(input []string, pre string) []string {
@@ -214,4 +236,9 @@ func ProcessPID(name string) int {
 	v, er := strconv.ParseInt(val, 10, 0)
 	Assert(er == nil, "parse pid %s fail: %s", val, er)
 	return int(v)
+}
+
+func RandInt(mod int) int {
+	rand.Seed(time.Now().Unix())
+	return rand.Int() % mod
 }

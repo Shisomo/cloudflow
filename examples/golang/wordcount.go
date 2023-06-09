@@ -10,7 +10,7 @@ func statistics(app *cf.App) map[string]int {
 	}
 }
 
-func readwords(se *cf.Session, readfile string) string {
+func readwords(se *cf.Session, count int64) string {
 	return "123123123"
 }
 
@@ -31,6 +31,6 @@ func main() {
 	var ses = app.CreateSession("session-1")
 	var flw = ses.CreateFlow("flow-1")
 	app.Reg(statistics, "record the process")
-	flw.Add(readwords, "read", "./test.txt").Map(countwords, "count", 10).Reduce(reducewords, "reduce")
+	flw.Add(readwords, "read", 1e8).Map(countwords, "count", 10).Reduce(reducewords, "reduce")
 	app.Run()
 }

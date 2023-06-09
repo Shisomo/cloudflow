@@ -1,9 +1,10 @@
 package kvops
 
 import (
-	cf "cloudflow/sdk/golang/cloudflow"
 	"context"
 	"time"
+
+	cf "cloudflow/sdk/golang/cloudflow"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
@@ -23,7 +24,7 @@ func NewEtcDOps(connUrls []string, scope string) *EtcDOps {
 	})
 	cf.Assert(err == nil, "create etcd client fail: %s", err)
 	ops.cli = cli
-	check_key := "atime" + cf.TimestampStr() + cf.AsMd5(cf.NodeName())
+	check_key := "atime" + cf.AsMd5(cf.AppID()) + cf.TimestampStr()
 	ops.Set(check_key, check_key)
 	rkey := ops.Get(check_key)
 	cf.Assert(rkey != nil, "verify etcd fail: %s != %s", check_key, rkey)
@@ -39,7 +40,7 @@ func (ops *EtcDOps) contex() (context.Context, context.CancelFunc) {
 func (ops *EtcDOps) Get(key string) interface{} {
 	ctx, cancel := ops.contex()
 	v, e := ops.cli.Get(ctx, ops.scope+"."+key)
-	cancel()
+	defer cancel()
 	if e != nil {
 		cf.Err("read key fail", e)
 		return nil
@@ -53,7 +54,7 @@ func (ops *EtcDOps) Get(key string) interface{} {
 func (ops *EtcDOps) Set(key string, value interface{}) bool {
 	ctx, cancel := ops.contex()
 	_, e := ops.cli.Put(ctx, ops.scope+"."+key, cf.Base64En(cf.AsJson(value)))
-	cancel()
+	defer cancel()
 	if e != nil {
 		cf.Err("set key fail:", e)
 		return false
@@ -64,10 +65,61 @@ func (ops *EtcDOps) Set(key string, value interface{}) bool {
 func (ops *EtcDOps) Del(key string) bool {
 	ctx, cancel := ops.contex()
 	_, e := ops.cli.Delete(ctx, ops.scope+"."+key, clientv3.WithPrefix())
-	cancel()
+	defer cancel()
 	if e != nil {
 		cf.Err("delete key fail", e)
 		return false
 	}
 	return true
+}
+
+func (ops *EtcDOps) SetKV(Kv map[string]interface{}, ignore_empty bool) bool {
+	ctx, cancel := ops.contex()
+	defer cancel()
+	for k, v := range Kv {
+		if ignore_empty {
+			switch v.(type) {
+			case int, int8, int16, int32, int64:
+				if v.(int) == 0 {
+					continue
+				}
+			case string:
+				if v.(string) == "" {
+					continue
+				}
+			default:
+			}
+		}
+		_, e := ops.cli.Put(ctx, ops.scope+"."+k, cf.Base64En(cf.AsJson(v)))
+		if e != nil {
+			cf.Err("set key:", k, "fail:", e)
+			return false
+		}
+	}
+	return true
+}
+
+func (ops *EtcDOps) GetKs(Kv []string, ignore_empty bool) map[string]interface{} {
+	ret := map[string]interface{}{}
+	for _, k := range Kv {
+		v := ops.Get(k)
+		if ignore_empty {
+			if v == nil {
+				continue
+			}
+			switch v.(type) {
+			case int, int8, int16, int32, int64:
+				if v.(int) == 0 {
+					continue
+				}
+			case string:
+				if v.(string) == "" {
+					continue
+				}
+			default:
+			}
+		}
+		ret[k] = v
+	}
+	return ret
 }

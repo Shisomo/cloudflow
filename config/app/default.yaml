@@ -16,3 +16,5 @@ cf:
     port: 4222
  exeuter:
   imp: default
+ scheduler:
+  imp: dumy

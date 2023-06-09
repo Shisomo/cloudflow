@@ -71,7 +71,7 @@ func (se *StateEtcd) Start() bool {
 	}
 	cf.Log("creat client with endpoints:", se.EtcdUrls)
 	se.EtcdOps = kv.NewEtcDOps(se.EtcdUrls, se.AppScope)
-	check_key := "atime" + cf.TimestampStr() + cf.AsMd5(cf.NodeName())
+	check_key := "atime" + cf.AsMd5(cf.AppID()) + cf.TimestampStr()
 	se.Set(check_key, check_key)
 	rkey := se.Get(check_key)
 	if rkey == nil {
@@ -119,4 +119,12 @@ func (se *StateEtcd) Del(key string) bool {
 
 func (se *StateEtcd) Set(key string, val interface{}) bool {
 	return se.EtcdOps.Set(key, val)
+}
+
+func (se *StateEtcd) SetKV(Kv map[string]interface{}, ignore_empty bool) bool {
+	return se.EtcdOps.SetKV(Kv, ignore_empty)
+}
+
+func (se *StateEtcd) GetKs(Kv []string, ignore_empty bool) map[string]interface{} {
+	return se.EtcdOps.GetKs(Kv, ignore_empty)
 }

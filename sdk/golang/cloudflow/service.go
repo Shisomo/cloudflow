@@ -1,6 +1,7 @@
 package cloudflow
 
 import (
+	comm "cloudflow/sdk/golang/cloudflow/comm"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -18,7 +19,7 @@ type Service struct {
 	KWArgs   []interface{} `json:"-"`
 	InsCount int           `json:"inscount"`
 	CTime    int64         `json:"ctime"`
-	ATime    int64         `json:"atime"`
+	comm.CommStat
 }
 
 func (srv *Service) MarshalJSON() ([]byte, error) {

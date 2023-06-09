@@ -1,6 +1,7 @@
 package cloudflow
 
 import (
+	comm "cloudflow/sdk/golang/cloudflow/comm"
 	"fmt"
 )
 
@@ -11,6 +12,7 @@ type Flow struct {
 	Nodes []*Node  `json:"node"`
 	Idx   int      `json:"index"`
 	CTime int64    `json:"ctime"`
+	comm.CommStat
 }
 
 var __flow_index__ int = 0

@@ -1,6 +1,7 @@
 package cloudflow
 
 import (
+	"cloudflow/sdk/golang/cloudflow/comm"
 	"encoding/json"
 	"os"
 	"os/exec"
@@ -12,6 +13,7 @@ type App struct {
 	Svrs  []*Service `json:"srvs"`
 	Sess  []*Session `json:"sess"`
 	CTime int64      `json:"ctime"`
+	comm.CommStat
 }
 
 func (app *App) CreateSession(name string) *Session {
@@ -110,7 +112,7 @@ func (app *App) Run() {
 		cf_path = path
 	}
 	app_id, app_cfg := app.ExportConfigJson()
-	Log(app_cfg)
+	Log("app config:\n", app_cfg)
 	cmd := exec.Command("bash", cf_path, "run", app_id, Base64En(app_cfg), os.Args[0])
 	//Log("launch:", cmd.String())
 	Log("*************cloudflow output*************")

@@ -1,12 +1,15 @@
 package cloudflow
 
+import comm "cloudflow/sdk/golang/cloudflow/comm"
+
 type Session struct {
 	Name  string  `json:"name"`
 	Uuid  string  `json:"uuid"`
 	App   *App    `json:"-"`
-	Flows []*Flow `json:"flows"`
+	Flows []*Flow `json:"flow"`
 	Idx   int     `json:"index"`
 	CTime int64   `json:"ctime"`
+	comm.CommStat
 }
 
 var __session_index__ int = 0

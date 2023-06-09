@@ -1,6 +1,7 @@
 package cloudflow
 
 import (
+	comm "cloudflow/sdk/golang/cloudflow/comm"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -22,7 +23,7 @@ type Node struct {
 	Synchz   bool          `json:"synchz"`
 	InsCount int           `json:"inscount"`
 	CTime    int64         `json:"ctime"`
-	ATime    int64         `json:"atime"`
+	comm.CommStat
 }
 
 func (node *Node) MarshalJSON() ([]byte, error) {
