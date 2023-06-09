@@ -242,3 +242,12 @@ func RandInt(mod int) int {
 	rand.Seed(time.Now().Unix())
 	return rand.Int() % mod
 }
+
+func StrListHas(list []string, val string) bool {
+	for _, v := range list {
+		if v == val {
+			return true
+		}
+	}
+	return false
+}

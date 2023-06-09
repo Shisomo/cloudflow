@@ -8,31 +8,34 @@
 scope.cfapplist:       [app_id_1, app_id_2, app_id_3, app_id_4, ...]
 scope.cfapplist.ctime: time       # 创建时间
 
-# 通用项: 每一类数据都有
-scope.cfapplist.descr: description # 描述
-scope.cfapplist.cstat: ALIVE      # 通用状态
-scope.cfapplist.stags: ALIVE      # 静态标签
-scope.cfapplist.atags: ALIVE      # 动态状态
-scope.cfapplist.count: 1000       # 调用次数
-scope.cfapplist.dsize: 1000       # 调用数据量(字节)
-scope.cfapplist.atime: time       # 最后修改时间
-scope.cfapplist.whoac: node_id    # 最后修改者
-scope.cfapplist.oplog: txtlog     # 操作日志
-scope.cfapplist.lock.owner:       # 更新锁.创建者
-scope.cfapplist.lock.ctime:       # 更新锁.创建时间
-scope.cfapplist.lock.ltime:       # 更新锁.预计耗时(s)
-
 # worker列表
 scope.cfworkers:       [worker_id_1, worker_id_2, worker_id_3, ...]
 scope.cfworkers.ctime: time       # 创建时间
 
 # 调度器列表
-scope.cfschedulers:       [scheduler_id_1, scheduler_id_2, ...]
-scope.cfschedulers.ctime: time      # 创建时间 
+scope.cfschedus:       [scheduler_id_1, scheduler_id_2, ...]
+scope.cfschedus.ctime: time      # 创建时间 
 ```
 
 ##### 2.应用
-###### 2.1 基本信息
+
+###### 通用项（comm）
+```
+scope.cfapp.descr: description # 描述
+scope.cfapp.cstat: ALIVE       # 通用状态
+scope.cfapp.stags: ALIVE       # 静态标签
+scope.cfapp.atags: ALIVE       # 动态状态
+scope.cfapp.count: 1000        # 调用次数
+scope.cfapp.dsize: 1000        # 调用数据量(字节)
+scope.cfapp.atime: time        # 最后修改时间
+scope.cfapp.whoac: node_id     # 最后修改者
+scope.cfapp.oplog: txtlog      # 操作日志
+scope.cfapp.lock.owner:        # 更新锁.创建者
+scope.cfapp.lock.ctime:        # 更新锁.创建时间
+scope.cfapp.lock.ltime:        # 更新锁.预计耗时(s)
+```
+
+###### 2.1 应用
 ```
 scope.cfapp.xxxx.ctime:
 scope.cfapp.xxxx.name:
@@ -45,7 +48,6 @@ scope.cfapp.xxxx.comm*
 
 ###### 2.2 rpc服务
 ```
-scope.srvs.xxxxx.atime:
 scope.srvs.xxxxx.ctime:
 scope.srvs.xxxxx.func:
 scope.srvs.xxxxx.index:
@@ -96,7 +98,7 @@ scope.node.xxxxx.comm*
 ```
 scope.wokr.xxxxx.uuid:
 scope.wokr.xxxxx.name:
-scope.wokr.xxxxx.task:   [node1, node2, ...]
+scope.wokr.xxxxx.task:   [app1, app2, ...]
 scope.wokr.xxxxx.ctime:
 scope.wokr.xxxxx.*       # worker自身相关
 ```

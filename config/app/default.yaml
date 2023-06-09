@@ -17,4 +17,6 @@ cf:
  exeuter:
   imp: default
  scheduler:
-  imp: dumy
+  imp: dumy_scheduler
+ worker:
+  imp: dumy_worker
