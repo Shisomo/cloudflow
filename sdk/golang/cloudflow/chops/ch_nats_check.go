@@ -36,8 +36,8 @@ func CheckNats(host string, port int) bool {
 		cf.Assert(nats.Put(test_channels, "Data"+cf.Itos(i)), "Put nats fail")
 	}
 	<-test_ch
-	nats.Stop(wkey1)
-	nats.Stop(wkey2)
+	nats.CStop(wkey1)
+	nats.CStop(wkey2)
 	nats.Close()
 	return test_success
 }

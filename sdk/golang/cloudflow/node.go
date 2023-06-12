@@ -53,6 +53,8 @@ func NewNode(flow *Flow, kw ...map[string]interface{}) *Node {
 	}
 	__node_index__ += 1
 	node.Update(kw...)
+	node.Parent = "flow." + flow.Uuid
+	node.Cstat = K_STAT_WAIT
 	return &node
 }
 

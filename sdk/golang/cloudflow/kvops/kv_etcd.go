@@ -2,6 +2,7 @@ package kvops
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	cf "cloudflow/sdk/golang/cloudflow"
@@ -39,7 +40,15 @@ func (ops *EtcDOps) contex() (context.Context, context.CancelFunc) {
 
 func (ops *EtcDOps) Get(key string) interface{} {
 	ctx, cancel := ops.contex()
-	v, e := ops.cli.Get(ctx, ops.scope+"."+key)
+	prefix := strings.Contains(key, "*")
+	var v *clientv3.GetResponse
+	var e error
+	if prefix {
+		key = strings.Replace(key, "*", "", -1)
+		v, e = ops.cli.Get(ctx, ops.scope+"."+key, clientv3.WithPrefix())
+	} else {
+		v, e = ops.cli.Get(ctx, ops.scope+"."+key)
+	}
 	defer cancel()
 	if e != nil {
 		cf.Err("read key fail", e)
@@ -48,10 +57,18 @@ func (ops *EtcDOps) Get(key string) interface{} {
 	if len(v.Kvs) < 1 {
 		return nil
 	}
+	if prefix {
+		ret := map[string]interface{}{}
+		for _, v := range v.Kvs {
+			ret[string(v.Key)] = cf.Astr(cf.FrJson(cf.Base64De(string(v.Value))))
+		}
+		return ret
+	}
 	return cf.FrJson(cf.Base64De(string(v.Kvs[0].Value)))
 }
 
 func (ops *EtcDOps) Set(key string, value interface{}) bool {
+	cf.Assert(!strings.Contains(key, "|"), "'|' can not in key")
 	ctx, cancel := ops.contex()
 	_, e := ops.cli.Put(ctx, ops.scope+"."+key, cf.Base64En(cf.AsJson(value)))
 	defer cancel()

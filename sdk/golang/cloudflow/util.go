@@ -85,10 +85,6 @@ func Assert(val bool, f string, msg ...interface{}) {
 	}
 }
 
-func CfgKeyPrefix() string {
-	return "cfapp."
-}
-
 func DumpKV(data *map[string]interface{}, result *map[string]interface{}, prefix string, lkey string) {
 	for k, v := range *data {
 		npref := prefix + "." + k
@@ -125,6 +121,13 @@ func FrJson(data string) interface{} {
 	return v
 }
 
+func Json2Map(data string) map[string]interface{} {
+	ret := map[string]interface{}{}
+	err := json.Unmarshal([]byte(data), &ret)
+	Assert(err == nil, "Unmarshal %s fail", data)
+	return ret
+}
+
 func AsKV(data interface{}) map[string]interface{} {
 	return FrJson(AsJson(data)).(map[string]interface{})
 }
@@ -159,6 +162,10 @@ func UpdateCfg(cfg *map[string]interface{}, n_cfg *map[string]interface{}) {
 			break
 		}
 	}
+}
+
+func Astr(v interface{}) string {
+	return fmt.Sprint(v)
 }
 
 func SetCfg(cfg *map[string]interface{}, key string, value interface{}) {
@@ -250,4 +257,8 @@ func StrListHas(list []string, val string) bool {
 		}
 	}
 	return false
+}
+
+func DotS(a ...string) string {
+	return strings.Join(a, ".")
 }

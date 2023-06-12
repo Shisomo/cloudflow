@@ -23,6 +23,7 @@ func NewSession(app *App, name string) *Session {
 		CTime: Timestamp(),
 		Flows: []*Flow{},
 	}
+	ses.Parent = "cfapp." + app.Uuid
 	app.Sess = append(app.Sess, &ses)
 	__session_index__ += 1
 	return &ses

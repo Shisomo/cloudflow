@@ -2,6 +2,11 @@ package cli
 
 import (
 	cf "cloudflow/sdk/golang/cloudflow"
+	"fmt"
+	"sort"
+	"strings"
+
+	sr "cloudflow/internal/service"
 
 	"github.com/spf13/cobra"
 )
@@ -12,6 +17,38 @@ var CMD_Stat = &cobra.Command{
 	Long:    "stat is ...., long description",
 	Aliases: []string{"s", "st", "stat"},
 	Run: func(cmd *cobra.Command, args []string) {
-		cf.Log("stat cmd", args)
+		cfg := GetAppCfg()
+		cf.SetCfg(&cfg, "cf.services.state.scope", app_scope)
+		cf.SetCfg(&cfg, "cf.app_nid", app_nodeid)
+		ops := sr.GetStateImp(cf.GetCfgC(&cfg, "cf.services.state"))
+		cf.Assert(ops.Restart(), "start stat ops fail!")
+		max_keys := 0
+		kvs := []string{}
+		key := "*"
+		if len(args) > 0 {
+			key = args[0] + "*"
+		}
+		all_data := ops.(sr.StateOps).Get(key)
+		if all_data == nil {
+			return
+		}
+		for k, d := range all_data.(map[string]interface{}) {
+			v := d.(string)
+			if strings.Contains(v, "rawcfg") {
+				continue
+			}
+			key_sz := len(k)
+			if key_sz > max_keys {
+				max_keys = key_sz
+			}
+			kvs = append(kvs, k+"|"+v)
+		}
+		sort.Strings(kvs)
+		for _, l := range kvs {
+			f := fmt.Sprintf("%%-%ds  %%s\n", max_keys+2)
+			//fmt.Println(f)
+			l := strings.SplitN(l, "|", 2)
+			fmt.Printf(f, l[0], l[1])
+		}
 	},
 }

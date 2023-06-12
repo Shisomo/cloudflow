@@ -4,11 +4,11 @@ import (
 	cf "cloudflow/sdk/golang/cloudflow"
 )
 
-type Message interface {
+type MessageOps interface {
 	ServiceOps
 }
 
-func GetMessageImp(cfg map[string]interface{}) Message {
+func GetMessageImp(cfg map[string]interface{}) MessageOps {
 	imp := cfg["imp"].(string)
 	cf.Log("create Message service with imp:", imp)
 	switch imp {

@@ -17,10 +17,10 @@ func StartWorker(cfg map[string]interface{}, ops kvops.KVOp) {
 }
 
 func TryStartWorker(cfg map[string]interface{}, ops kvops.KVOp) {
-	sche := cfmodule.ListCfModule(ops, cfmodule.K_CF_WORKERS)
+	sche := cfmodule.ListCfModule(ops, cf.K_CF_WORKERS)
 	if len(sche) < 1 {
 		cf.Log("no workers find, create new one")
 		StartWorker(cfg, ops)
 	}
-	cf.Log("runing workers:", cfmodule.ListCfModule(ops, cfmodule.K_CF_WORKERS))
+	cf.Log("runing workers:", cfmodule.ListCfModule(ops, cf.K_CF_WORKERS))
 }

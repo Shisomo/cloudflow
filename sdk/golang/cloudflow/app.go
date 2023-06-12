@@ -78,7 +78,7 @@ func (app *App) ExportConfigJson() (string, string) {
 	json.Unmarshal([]byte(cfgjson), &appdata)
 
 	var exportJS = make(map[string]interface{})
-	prefix := CfgKeyPrefix() + app.Uuid
+	prefix := "cfapp." + app.Uuid
 	exportJS[prefix+".rawcfg"] = Base64En(cfgjson)
 	exportJS[prefix+".sdkv"] = Version()
 	DumpKV(&appdata, &exportJS, prefix, "uuid")

@@ -19,6 +19,8 @@ func GetKVOpImp(imp string, cfg map[string]interface{}) KVOp {
 
 func Lock(ops KVOp, key string, owner string) {
 	key_owner := key + ".lock.owner"
+	block_time := cf.Timestamp()
+	block_flage := 0
 	for {
 		v := ops.Get(key_owner)
 		if v == owner {
@@ -29,6 +31,11 @@ func Lock(ops KVOp, key string, owner string) {
 		}
 		wait_time := cf.RandInt(100)
 		time.Sleep(time.Microsecond * time.Duration(wait_time))
+		delta := (cf.Timestamp() - int64(block_time)) / int64(time.Second)
+		if delta > 0 && delta%10 == int64(block_flage) {
+			block_flage = int(delta+5) % 10
+			cf.Log("waiting lock:", key, delta, "seconds")
+		}
 	}
 	ops.Set(key+".lock.atime", cf.Timestamp())
 }

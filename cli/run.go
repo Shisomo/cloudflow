@@ -24,6 +24,7 @@ var CMD_Run = &cobra.Command{
 		// launch
 		flow := it.NewCloudFlow(&cfg)
 		flow.StartService()
+		flow.StartSchAndWorker()
 		flow.SubmitApp(args[0], args[1], args[2], app_nodeid)
 	},
 }

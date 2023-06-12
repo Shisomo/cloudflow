@@ -22,6 +22,7 @@ scope.cfschedus.ctime: time      # 创建时间
 ###### 通用项（comm）
 ```
 scope.cfapp.descr: description # 描述
+scope.cfapp.optin: A|B|C       # 通用状态
 scope.cfapp.cstat: ALIVE       # 通用状态
 scope.cfapp.stags: ALIVE       # 静态标签
 scope.cfapp.atags: ALIVE       # 动态状态
@@ -64,7 +65,7 @@ scope.sess.xxxxx.name:
 scope.sess.xxxxx.index:
 scope.sess.xxxxx.uuid:
 scope.sess.xxxxx.ctime:
-scope.sess.xxxxx.flows: [id1, id2, ...]
+scope.sess.xxxxx.flow: [id1, id2, ...]
 scope.sess.xxxxx.comm*
 ```
 
@@ -74,7 +75,7 @@ scope.flow.xxxxx.ctime:
 scope.flow.xxxxx.uuid:
 scope.flow.xxxxx.index:
 scope.flow.xxxxx.name:
-scope.flow.xxxxx.nodes: [id1, id2, ...]
+scope.flow.xxxxx.node: [id1, id2, ...]
 scope.flow.xxxxx.comm*
 ```
 
@@ -94,11 +95,11 @@ scope.node.xxxxx.comm*
 
 
 ##### 3.调度与worker
-###### 3.1 worker
+###### 3.1 worker（支持node，flow，app等各级粒度）
 ```
 scope.wokr.xxxxx.uuid:
 scope.wokr.xxxxx.name:
-scope.wokr.xxxxx.task:   [app1, app2, ...]
+scope.wokr.xxxxx.task:   [cfapp.uuid, srvs.uuid, flow.uuid, node.uuid, ...]
 scope.wokr.xxxxx.ctime:
 scope.wokr.xxxxx.*       # worker自身相关
 ```

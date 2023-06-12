@@ -62,7 +62,7 @@ func (nt *NatsChOp) Watch(ch_name []string, fc func(worker string, subj string, 
 	return cnkey
 }
 
-func (nt *NatsChOp) Stop(cnkey []string) bool {
+func (nt *NatsChOp) CStop(cnkey []string) bool {
 	for _, key := range cnkey {
 		worker, val := nt.subs[key]
 		if val {

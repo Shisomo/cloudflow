@@ -28,6 +28,7 @@ func NewFlow(se *Session, name string) *Flow {
 	}
 	__flow_index__ += 1
 	se.Flows = append(se.Flows, &flow)
+	flow.Parent = "sess." + se.Uuid
 	return &flow
 }
 
