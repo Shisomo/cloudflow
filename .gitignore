@@ -16,3 +16,4 @@ vendor/
 
 # binaries
 bin/
+log/

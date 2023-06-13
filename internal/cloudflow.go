@@ -7,6 +7,7 @@ import (
 	cf "cloudflow/sdk/golang/cloudflow"
 	"cloudflow/sdk/golang/cloudflow/cfmodule"
 	"cloudflow/sdk/golang/cloudflow/chops"
+	"cloudflow/sdk/golang/cloudflow/fileops"
 	"strings"
 	"time"
 )
@@ -15,6 +16,7 @@ type CloudFlow struct {
 	cfg      *map[string]interface{}
 	StateSrv sr.StateOps
 	chOps    chops.ChannelOp
+	flOps    fileops.FileOps
 }
 
 func NewCloudFlow(cfg *map[string]interface{}) *CloudFlow {
@@ -29,7 +31,7 @@ func NewChanlOps(cfg map[string]interface{}, stream string) chops.ChannelOp {
 	port := cfg["port"].(int)
 	switch imp {
 	case "nats":
-		return chops.NewNatsChOp("nats://"+host+cf.Itos(port), stream)
+		return chops.NewNatsChOp("nats://"+host+":"+cf.Itos(port), stream)
 	default:
 		cf.Assert(false, "%s not support", imp)
 	}
@@ -52,7 +54,7 @@ func (self *CloudFlow) StartService() {
 	// TBD
 
 	// start file storage
-	cf.Log("Fake file storage service, FIXME")
+	cf.Log("Fake start file storage service, FIXME")
 	// TBD
 }
 
@@ -65,19 +67,28 @@ func (self *CloudFlow) StartSchAndWorker() {
 
 func (self *CloudFlow) SubmitApp(app_key string, app_base64_cfg string, exec_file string, node_uuid string) {
 	cf.Log("submit app:", app_key, "exec:", exec_file, "node:", node_uuid)
-	cf.Log(self.StateSrv.Get("cl-app-list"))
+	cf.Log("find apps:", cfmodule.ListKeys(self.StateSrv, cf.K_CF_APPLIST, ""))
 
 	app_id := strings.Split(app_key, ".")[1]
-	if !cf.StrListHas(cfmodule.ListCfModule(self.StateSrv, cf.K_CF_APPLIST), app_id) {
+	if !cf.StrListHas(cfmodule.ListKeys(self.StateSrv, cf.K_CF_APPLIST, ""), app_id) {
 		cf.Log("load app:", app_id)
-		cfmodule.ListAdd(self.StateSrv, cf.K_CF_APPLIST, app_id, "user_submit", true)
+		self.StateSrv.Set(cf.DotS(cf.K_CF_APPLIST, app_key), cf.K_STAT_WAIT)
+
+		exec_file_key := cf.DotS(app_key, cf.K_MEMBER_EXEC)
+		self.StateSrv.Set(exec_file_key, exec_file)
 		app_data := cf.Json2Map(cf.Base64De(app_base64_cfg))
 		self.StateSrv.SetKV(app_data, false)
+
+		// upload exec file
+		cf.Log("start file storage service")
+		self.flOps = fileops.GetFileOps(app_id, cf.GetCfgC(self.cfg, "cf.services.fstore"))
+		self.flOps.Put(exec_file_key, exec_file)
+		self.flOps.Close()
 	} else {
 		cf.Log("app:", app_id, "already exist")
 	}
 
-	// wach logs
+	// watch app logs
 	self.chOps = NewChanlOps(cf.GetCfgC(self.cfg, "cf.services.message"), app_id)
 	ch := []string{
 		app_id + ".log",

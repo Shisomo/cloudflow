@@ -2,6 +2,7 @@ package chops
 
 import (
 	cf "cloudflow/sdk/golang/cloudflow"
+	"strings"
 )
 
 func CheckNats(host string, port int) bool {
@@ -13,7 +14,11 @@ func CheckNats(host string, port int) bool {
 	test_msg_size := 10
 	test_msg_idx := 10
 
-	nats := NewNatsChOp("nat:"+host+":"+cf.Itos(port), test_stream)
+	conurl := host
+	if !strings.Contains(host, "/") {
+		conurl = "nats://" + host + ":" + cf.Itos(port)
+	}
+	nats := NewNatsChOp(conurl, test_stream)
 	wkey1 := nats.Watch(test_channels, func(wkid, ch string, a string) bool {
 		test_msg_idx += 1
 		if test_msg_idx == test_msg_size*len(test_channels) {

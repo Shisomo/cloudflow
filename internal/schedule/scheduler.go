@@ -17,10 +17,10 @@ func StartScheduler(cfg map[string]interface{}, ops kvops.KVOp) {
 }
 
 func TryStartSchduler(cfg map[string]interface{}, ops kvops.KVOp) {
-	sche := cfmodule.ListCfModule(ops, cf.K_CF_SCHEDUS)
+	sche := cfmodule.ListKeys(ops, cf.K_CF_SCHEDUS, cf.K_STAT_WORK)
 	if len(sche) < 1 {
 		cf.Log("no schadulers find, create new one")
 		StartScheduler(cfg, ops)
 	}
-	cf.Log("runing schedulers:", cfmodule.ListCfModule(ops, cf.K_CF_SCHEDUS))
+	cf.Log("runing schedulers:", cfmodule.ListKeys(ops, cf.K_CF_SCHEDUS, cf.K_STAT_WORK))
 }

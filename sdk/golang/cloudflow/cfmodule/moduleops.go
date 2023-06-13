@@ -8,123 +8,34 @@ import (
 
 type CfModuleOps interface {
 	Run()
-	Sync()
 }
 
-func AddCfModule(ops kvops.KVOp, md *StateCfModule, md_ky_data interface{}, md_key string, md_abr string) bool {
-	// cf.md_key: [id1, id2, ...]
-	// Add m.uuid to list
-	ListAdd(ops, md_key, md.Uuid, md.Uuid, true)
-	// Add data of m
-	ops.SetKV(cf.Dump(md_ky_data, md_abr+"."+md.Uuid, "uuid"), false)
-	return true
+func AddModuleAndToList(ops kvops.KVOp, md_uuid string, md_ky_data interface{},
+	list_prefix string, stat string, md_abr string) {
+	md_key := cf.DotS(md_abr, md_uuid)
+	ops.Set(cf.DotS(list_prefix, md_key), stat)
+	ops.SetKV(cf.Dump(md_ky_data, md_key, "uuid", "cstat"), false)
 }
 
-func AddCfKVlaues(ops kvops.KVOp, uuid_map map[string]interface{}, key string, subfix string, uuid_who string) {
-	kvops.Lock(ops, key, uuid_who) // locak
-	rkey := key
-	if subfix != "" {
-		rkey = rkey + "." + subfix
-	}
-	ulist := ListCfModule(ops, rkey)
-	for k, v := range uuid_map {
-		ulist = append(ulist, k)
-		ops.SetKV(v.(map[string]interface{}), false)
-	}
-	ops.Set(rkey, ulist)
-	NoLockUpdateAcc(ops, key, uuid_who)
-	kvops.UnLock(ops, key, uuid_who) // unlock
-}
-
-func ListCfModule(ops kvops.KVOp, md_key string) []string {
-	// cf.md_key: [id1, id2, ...]
-	scs := ops.Get(md_key)
-	if scs == nil {
-		return []string{}
-	}
-	ret := []string{}
-	for _, v := range scs.([]interface{}) {
-		ret = append(ret, v.(string))
-	}
-	return ret
-}
-
-func ListAdd(ops kvops.KVOp, key string, target string, uuid_who string, lock bool) {
-	if lock {
-		kvops.Lock(ops, key, uuid_who)
-	}
-	md_list := ListCfModule(ops, key)
-	md_list = append(md_list, target)
-	ops.Set(key, md_list)
-	ctime_key := key + ".ctime"
-	if ops.Get(ctime_key) == nil {
-		ops.Set(ctime_key, cf.Timestamp())
-	}
-	NoLockUpdateAcc(ops, key, uuid_who)
-	if lock {
-		kvops.UnLock(ops, key, uuid_who)
-	}
-}
-
-func FilterModule(ops kvops.KVOp, keylist []string, abb string, filter_key string, fc func(interface{}) bool) []string {
-	ret := []string{}
-	for _, k := range keylist {
-		target := abb + "." + k + "." + filter_key
-		if fc(ops.Get(target)) {
-			ret = append(ret, k)
+func BatchAddRawDataAndToList(ops kvops.KVOp, raw_data []interface{}, prefix string, val string) {
+	for _, d := range raw_data {
+		d := d.(map[string]interface{})
+		uuid_key := ""
+		for k := range d {
+			uuid_key = strings.Join(strings.Split(k, ".")[:2], ".")
+			break
 		}
+		ops.Set(cf.DotS(prefix, uuid_key), val)
+		ops.SetKV(d, false)
 	}
-	return ret
 }
 
-func RmFromList(ops kvops.KVOp, key string, subfix string, val []string, uuid_who string) {
-	// lock
-	kvops.Lock(ops, key, uuid_who)
-	rkey := key
-	if subfix != "" {
-		rkey = rkey + "." + subfix
-	}
-	target := []string{}
-	for _, v := range ops.Get(rkey).([]string) {
-		if cf.StrListHas(val, v) {
-			continue
-		}
-		target = append(target, v)
-	}
-	NoLockUpdateAcc(ops, key, uuid_who)
-	ops.Set(rkey, target)
-	// unlock
-	kvops.UnLock(ops, key, uuid_who)
+func GetVal(ops kvops.KVOp, key ...string) interface{} {
+	return ops.Get(cf.DotS(key...))
 }
 
-func AddToList(ops kvops.KVOp, key string, subfix string, val []string, uuid_who string) {
-	// lock
-	kvops.Lock(ops, key, uuid_who)
-	rkey := key
-	if subfix != "" {
-		rkey = rkey + "." + subfix
-	}
-	target := []string{}
-	origno := ops.Get(rkey)
-	cf.Assert(origno != nil, "%s", rkey)
-	origns := []string{}
-	for _, v := range origno.([]interface{}) {
-		origns = append(origns, v.(string))
-	}
-	for _, v := range val {
-		if cf.StrListHas(origns, v) {
-			continue
-		}
-		target = append(target, v)
-	}
-	NoLockUpdateAcc(ops, key, uuid_who)
-	ops.Set(rkey, target)
-	// unlock
-	kvops.UnLock(ops, key, uuid_who)
-}
-
-func GetVal(ops kvops.KVOp, key string, sub string) interface{} {
-	return ops.Get(key + "." + sub)
+func SetVal(ops kvops.KVOp, val interface{}, key ...string) bool {
+	return ops.Set(cf.DotS(key...), val)
 }
 
 func GetStat(ops kvops.KVOp, key string) string {
@@ -136,51 +47,61 @@ func GetStat(ops kvops.KVOp, key string) string {
 }
 
 func UpdateStat(ops kvops.KVOp, key string, new_stat string, uuid_who string) {
-	kvops.Lock(ops, key, uuid_who)
 	ops.Set(key+".cstat", new_stat)
-	kvops.UnLock(ops, key, uuid_who)
 }
 
 func UpdateAcc(ops kvops.KVOp, key string, uuid_who string) {
-	kvops.Lock(ops, key, uuid_who)
-	NoLockUpdateAcc(ops, key, uuid_who)
-	kvops.UnLock(ops, key, uuid_who)
-}
-
-func NoLockUpdateAcc(ops kvops.KVOp, key string, uuid_who string) {
 	ops.Set(key+".ctime", cf.Timestamp())
 	ops.Set(key+".whoac", uuid_who)
 }
 
-func CopyIns(ops kvops.KVOp, key string, count int) map[string]interface{} {
-	new_ins := map[string]interface{}{}
+func CopyIns(ops kvops.KVOp, key string, count int) []interface{} {
+	new_ins := []interface{}{}
 	old_ins := ops.Get(key + "*").(map[string]interface{})
-
-	_, r := old_ins[key+"."+cf.K_MEMBER_INSCOUNT]
-	cf.Assert(r == false, "%s has no memeber: %s", key, cf.K_MEMBER_INSCOUNT)
+	key_inscount := cf.DotS(key, cf.K_MEMBER_INSCOUNT)
+	_, r := old_ins[key_inscount]
+	cf.Assert(r == true, "%s has: %s, cannot copy!, data:%s\n", key, key_inscount, old_ins)
 	for i := 0; i < count; i++ {
-		ins := map[string]interface{}{}
+		n_ins := map[string]interface{}{}
 		uid := ""
 		// copy values
 		for k, v := range old_ins {
 			value := v
-			// 0     1   2    3
-			// scope.abb.uuid.memb
+			// 0     1   2
+			// abb.uuid.memb
 			sp_key := strings.Split(k, ".")
 			if uid == "" {
-				uid = sp_key[2] + "-" + cf.Itos(i+1)
+				uid = sp_key[1] + "-" + cf.Itos(i+1)
 			}
 			cf.Assert(uid != "", "error")
-			if len(sp_key) == 4 {
-				if sp_key[3] == cf.K_MEMBER_SUB_INDX {
+			if len(sp_key) == 3 {
+				if sp_key[2] == cf.K_MEMBER_SUB_INDX {
 					value = i + 1
 				}
 			}
-			sp_key[2] = uid
-			key = strings.Join(sp_key, ".")
-			ins[key] = value
+			sp_key[1] = uid
+			n_ins[cf.DotS(sp_key...)] = value
 		}
-		new_ins[uid] = ins
+		new_ins = append(new_ins, n_ins)
 	}
 	return new_ins
+}
+
+func ListKeys(ops kvops.KVOp, prefix string, targt string) []string {
+	//  k.uuid0 val0
+	//  k.uuid1 val1
+	//  k.uuid2 val2
+	//  return: uuid
+	ret := []string{}
+	values := ops.Get(prefix + ".*")
+	if values == nil {
+		return ret
+	}
+	for k, v := range values.(map[string]interface{}) {
+		v := v.(string)
+		if targt == "" || targt == v {
+			ret = append(ret, strings.Replace(k, prefix+".", "", 1))
+		}
+	}
+	return ret
 }

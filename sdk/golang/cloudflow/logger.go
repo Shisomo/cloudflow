@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime/debug"
 )
 
 var flags = log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile
@@ -20,6 +21,7 @@ func Err(args ...interface{}) {
 
 func Errf(f string, args ...interface{}) {
 	logger.Output(2, fmt.Sprintf(f, args...))
+	debug.PrintStack()
 	os.Exit(1)
 }
 

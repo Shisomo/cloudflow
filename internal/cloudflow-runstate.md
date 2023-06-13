@@ -3,17 +3,30 @@
 #### cloudflow 状态布局 （KV）
 
 ##### 1.管理（常驻）
+
+列表缩写
+```
+# 原始list：
+aa.bb.xxx.k1:  v1
+aa.bb.xxx.k2:  v1
+aa.bb.xxx.k3:  v1
+...
+# 缩写为:
+aa.bb.xxx:   [k1, k2, k3, ...]
+```
+
+基本Meta数据
 ```
 # 应用列表
-scope.cfapplist:       [app_id_1, app_id_2, app_id_3, app_id_4, ...]
+scope.cfapplist:       [app_key_i, app_key_2, app_key_3, ...]
 scope.cfapplist.ctime: time       # 创建时间
 
 # worker列表
-scope.cfworkers:       [worker_id_1, worker_id_2, worker_id_3, ...]
+scope.cfworkers:       [worker_key_1, worker_key_2, worker_key_3, ...]
 scope.cfworkers.ctime: time       # 创建时间
 
 # 调度器列表
-scope.cfschedus:       [scheduler_id_1, scheduler_id_2, ...]
+scope.cfschedus:       [scheduler_key_1, scheduler_key_2, ...]
 scope.cfschedus.ctime: time      # 创建时间 
 ```
 
@@ -42,8 +55,8 @@ scope.cfapp.xxxx.ctime:
 scope.cfapp.xxxx.name:
 scope.cfapp.xxxx.rawcfg:
 scope.cfapp.xxxx.sdkv:
-scope.cfapp.xxxx.srvs:   [id1, id2, ...]
-scope.cfapp.xxxx.sess:   [id1, id2, ...]
+scope.cfapp.xxxx.srvs:   [svr_key_1, svr_key_2, ...]     # 列表
+scope.cfapp.xxxx.sess:   [ses_key_1, ses_key_2, ...]     # 列表
 scope.cfapp.xxxx.comm*
 ```
 
@@ -65,7 +78,7 @@ scope.sess.xxxxx.name:
 scope.sess.xxxxx.index:
 scope.sess.xxxxx.uuid:
 scope.sess.xxxxx.ctime:
-scope.sess.xxxxx.flow: [id1, id2, ...]
+scope.sess.xxxxx.flow: [flow_key_1, flow_key_2, ...]
 scope.sess.xxxxx.comm*
 ```
 
@@ -75,7 +88,7 @@ scope.flow.xxxxx.ctime:
 scope.flow.xxxxx.uuid:
 scope.flow.xxxxx.index:
 scope.flow.xxxxx.name:
-scope.flow.xxxxx.node: [id1, id2, ...]
+scope.flow.xxxxx.node: [node_key_1, node_key_2, ...]
 scope.flow.xxxxx.comm*
 ```
 
@@ -99,7 +112,7 @@ scope.node.xxxxx.comm*
 ```
 scope.wokr.xxxxx.uuid:
 scope.wokr.xxxxx.name:
-scope.wokr.xxxxx.task:   [cfapp.uuid, srvs.uuid, flow.uuid, node.uuid, ...]
+scope.wokr.xxxxx.task:   [task_key_1, task_key_2, ...]
 scope.wokr.xxxxx.ctime:
 scope.wokr.xxxxx.*       # worker自身相关
 ```

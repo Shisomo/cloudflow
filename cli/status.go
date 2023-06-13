@@ -33,7 +33,7 @@ var CMD_Stat = &cobra.Command{
 			return
 		}
 		for k, d := range all_data.(map[string]interface{}) {
-			v := d.(string)
+			v := cf.Astr(d)
 			if strings.Contains(v, "rawcfg") {
 				continue
 			}

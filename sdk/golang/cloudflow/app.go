@@ -81,7 +81,7 @@ func (app *App) ExportConfigJson() (string, string) {
 	prefix := "cfapp." + app.Uuid
 	exportJS[prefix+".rawcfg"] = Base64En(cfgjson)
 	exportJS[prefix+".sdkv"] = Version()
-	DumpKV(&appdata, &exportJS, prefix, "uuid")
+	DumpKV(&appdata, &exportJS, prefix, "uuid", "cstat")
 
 	return prefix, AsJson(&exportJS)
 }
@@ -112,7 +112,7 @@ func (app *App) Run() {
 		cf_path = path
 	}
 	app_id, app_cfg := app.ExportConfigJson()
-	Log("app config:\n", app_cfg)
+	//Log("app config:\n", app_cfg)
 	cmd := exec.Command("bash", cf_path, "run", app_id, Base64En(app_cfg), os.Args[0])
 	//Log("launch:", cmd.String())
 	Log("*************cloudflow output*************")

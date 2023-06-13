@@ -60,7 +60,8 @@ func (ops *EtcDOps) Get(key string) interface{} {
 	if prefix {
 		ret := map[string]interface{}{}
 		for _, v := range v.Kvs {
-			ret[string(v.Key)] = cf.Astr(cf.FrJson(cf.Base64De(string(v.Value))))
+			ret[strings.Replace(string(v.Key),
+				ops.scope+".", "", 1)] = cf.FrJson(cf.Base64De(string(v.Value)))
 		}
 		return ret
 	}

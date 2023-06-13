@@ -50,6 +50,7 @@ func NewService(app *App, fc interface{}, name string, kwargs ...interface{}) *S
 	}
 	srv.Parent = "cfapp." + app.Uuid
 	srv.Cstat = K_STAT_WAIT
+	srv.AppUid = app.Uuid
 	app.Svrs = append(app.Svrs, &srv)
 	srv.UpdateUuid()
 	__srv_index__ += 1

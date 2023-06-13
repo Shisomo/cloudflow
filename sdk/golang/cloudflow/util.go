@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/rand"
 	"net"
 	"os"
@@ -85,23 +86,21 @@ func Assert(val bool, f string, msg ...interface{}) {
 	}
 }
 
-func DumpKV(data *map[string]interface{}, result *map[string]interface{}, prefix string, lkey string) {
+func DumpKV(data *map[string]interface{}, result *map[string]interface{}, prefix string, lkey string, skey string) {
 	for k, v := range *data {
 		npref := prefix + "." + k
 		switch reflect.TypeOf(v).Kind() {
 		case reflect.Map:
 			v := v.(map[string]interface{})
-			DumpKV(&v, data, k, lkey)
+			DumpKV(&v, data, k, lkey, skey)
 		case reflect.Slice, reflect.Array:
 			v := v.([]interface{})
-			klist := []string{}
 			for _, itm := range v {
 				itm := itm.(map[string]interface{})
 				uuid := itm[lkey].(string)
-				klist = append(klist, uuid)
-				DumpKV(&itm, result, k+"."+uuid, lkey)
+				(*result)[DotS(npref, k, uuid)] = itm[skey]
+				DumpKV(&itm, result, DotS(k, uuid), lkey, skey)
 			}
-			(*result)[npref] = klist
 		default:
 			(*result)[npref] = v
 		}
@@ -132,10 +131,10 @@ func AsKV(data interface{}) map[string]interface{} {
 	return FrJson(AsJson(data)).(map[string]interface{})
 }
 
-func Dump(data interface{}, prefix string, lkey string) map[string]interface{} {
+func Dump(data interface{}, prefix string, lkey string, skey string) map[string]interface{} {
 	ret := map[string]interface{}{}
 	kv := AsKV(data)
-	DumpKV(&kv, &ret, prefix, lkey)
+	DumpKV(&kv, &ret, prefix, lkey, skey)
 	return ret
 }
 
@@ -261,4 +260,20 @@ func StrListHas(list []string, val string) bool {
 
 func DotS(a ...string) string {
 	return strings.Join(a, ".")
+}
+
+func ByteHuman(size float64) string {
+	if size < math.Pow(1024, 1) {
+		return fmt.Sprintf("%.2f B", size/math.Pow(1024, 0))
+	}
+	if size < math.Pow(1024, 2) {
+		return fmt.Sprintf("%.2f KB", size/math.Pow(1024, 1))
+	}
+	if size < math.Pow(1024, 3) {
+		return fmt.Sprintf("%.2f MB", size/math.Pow(1024, 2))
+	}
+	if size < math.Pow(1024, 4) {
+		return fmt.Sprintf("%.2f GB", size/math.Pow(1024, 3))
+	}
+	return fmt.Sprintf("%.2f TB", size/math.Pow(1024, 4))
 }

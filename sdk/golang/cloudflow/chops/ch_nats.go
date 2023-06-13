@@ -17,8 +17,8 @@ type NatsChOp struct {
 }
 
 func NewNatsChOp(nc_url string, stream_name string) *NatsChOp {
-	nc, err := nats.Connect(nats.DefaultURL)
-	cf.Assert(err == nil, "connet Nats error: %s", err)
+	nc, err := nats.Connect(nc_url)
+	cf.Assert(err == nil, "connet(%s) Nats error: %s", nc_url, err)
 	js, err := nc.JetStream()
 	cf.Assert(err == nil, "create jetstream error: %s", err)
 	st, err := js.AddStream(&nats.StreamConfig{
