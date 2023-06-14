@@ -2,8 +2,8 @@ package schedule
 
 import (
 	"cloudflow/internal/task"
-	cf "cloudflow/sdk/golang/cloudflow"
 	"cloudflow/sdk/golang/cloudflow/cfmodule"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"cloudflow/sdk/golang/cloudflow/kvops"
 	"runtime"
 	"time"
@@ -46,6 +46,7 @@ func (sch *DumySche) Run() {
 				if inst_count > 0 {
 					if int(cfmodule.GetVal(sch.Kvops, tsk.Uuid_key, cf.K_MEMBER_SUB_INDX).(float64)) == 0 {
 						// copy instances
+						cfmodule.SetVal(sch.Kvops, inst_count, tsk.Uuid_key, cf.K_MEMBER_INSCOUNT)
 						cf.Log("copy task", tsk.Uuid_key, "as", inst_count, "ones")
 						task.CopyTasks(sch.Kvops, tsk, inst_count, cf.K_STAT_WAIT)
 					}
@@ -55,8 +56,8 @@ func (sch *DumySche) Run() {
 			for _, tsk := range tasks {
 				sc_worker := workers[tsk_id%worker_size]
 				cf.Log("schedule task:", tsk, " to worker:", sc_worker)
-				task.AddTaskTo(sch.Kvops, tsk, sc_worker)
-				task.UpTaskStat(sch.Kvops, tsk, cf.K_STAT_PEDD, cf.DotS(cf.K_AB_SCHEDU, sch.Uuid))
+				task.AddTo(sch.Kvops, tsk, sc_worker)
+				task.UpdateStat(sch.Kvops, tsk, cf.K_STAT_PEDD, cf.DotS(cf.K_AB_SCHEDU, sch.Uuid))
 				tsk_id += 1
 			}
 			// watch key + timeout: TBD

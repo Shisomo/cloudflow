@@ -1,7 +1,7 @@
 package cloudflow
 
 import (
-	comm "cloudflow/sdk/golang/cloudflow/comm"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -16,14 +16,13 @@ type Node struct {
 	Uuid     string        `json:"uuid"`
 	Idx      int           `json:"index"`
 	SubIdx   int           `json:"subidx"`
-	OutCh    string        `json:"outch"`
 	PreNodes []*Node       `json:"-"`
 	NexNodes []*Node       `json:"-"`
-	KWArgs   []interface{} `json:"-"`
+	ExArgs   []interface{} `json:"-"`
 	Synchz   bool          `json:"synchz"`
 	InsCount int           `json:"inscount"`
 	CTime    int64         `json:"ctime"`
-	comm.CommStat
+	cf.CommStat
 }
 
 func (node *Node) MarshalJSON() ([]byte, error) {
@@ -49,13 +48,13 @@ func NewNode(flow *Flow, kw ...map[string]interface{}) *Node {
 	var node = Node{
 		Idx:   __node_index__,
 		Flow:  flow,
-		CTime: Timestamp(),
+		CTime: cf.Timestamp(),
 	}
 	__node_index__ += 1
 	node.Update(kw...)
 	node.Parent = "flow." + flow.Uuid
 	node.AppUid = flow.Sess.App.Uuid
-	node.Cstat = K_STAT_WAIT
+	node.Cstat = cf.K_STAT_WAIT
 	return &node
 }
 
@@ -67,21 +66,19 @@ func (node *Node) Update(kw ...map[string]interface{}) {
 			if v.CanSet() {
 				v.Set(reflect.ValueOf(value))
 			} else {
-				Err("Set Node fail:", "k=", key, "v=", value)
+				cf.Assert(false, "Set Node fail: k=%s v=%s, %s", key, value, kw)
 			}
 		}
 	}
-	outch := node.Flow.Uuid + "." + Itos(node.Idx) + "." + node.Name
-	node.OutCh = outch
-	identies := outch + "." + Itos(node.SubIdx)
-	node.Uuid = AsMd5(identies)
+	identies := cf.DotS(node.Flow.Uuid, cf.Itos(node.Idx), node.Name, cf.Itos(node.SubIdx))
+	node.Uuid = cf.AsMd5(identies)
 }
 
-func (node *Node) append(fc interface{}, name string, kwargs []interface{}) *Node {
+func (node *Node) append(fc interface{}, name string, ex_args []interface{}) *Node {
 	var new_node = NewNode(node.Flow, map[string]interface{}{
 		"Name":     name,
 		"Func":     fc,
-		"KWArgs":   kwargs,
+		"ExArgs":   ex_args,
 		"InsCount": 1,
 		"Synchz":   false,
 	})
@@ -92,16 +89,16 @@ func (node *Node) append(fc interface{}, name string, kwargs []interface{}) *Nod
 	return new_node
 }
 
-func (node *Node) Add(fc interface{}, name string, kwargs ...interface{}) *Node {
-	return node.append(fc, name, kwargs)
+func (node *Node) Add(fc interface{}, name string, ex_args ...interface{}) *Node {
+	return node.append(fc, name, ex_args)
 }
 
-func (node *Node) Map(fc interface{}, name string, count int, kwargs ...interface{}) *Node {
-	var new_node = node.append(fc, name, kwargs)
+func (node *Node) Map(fc interface{}, name string, count int, ex_args ...interface{}) *Node {
+	var new_node = node.append(fc, name, ex_args)
 	new_node.InsCount = count
 	return new_node
 }
 
-func (node *Node) Reduce(fc interface{}, name string, kwargs ...interface{}) *Node {
-	return node.append(fc, name, kwargs)
+func (node *Node) Reduce(fc interface{}, name string, ex_args ...interface{}) *Node {
+	return node.append(fc, name, ex_args)
 }

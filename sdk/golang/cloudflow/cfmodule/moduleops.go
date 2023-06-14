@@ -1,7 +1,7 @@
 package cfmodule
 
 import (
-	cf "cloudflow/sdk/golang/cloudflow"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"cloudflow/sdk/golang/cloudflow/kvops"
 	"strings"
 )

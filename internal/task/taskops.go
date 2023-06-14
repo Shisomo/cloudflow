@@ -1,8 +1,8 @@
 package task
 
 import (
-	cf "cloudflow/sdk/golang/cloudflow"
 	"cloudflow/sdk/golang/cloudflow/cfmodule"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"cloudflow/sdk/golang/cloudflow/kvops"
 )
 
@@ -42,11 +42,15 @@ func CopyTasks(ops kvops.KVOp, tsk Task, count int, stat string) {
 	cfmodule.BatchAddRawDataAndToList(ops, ins_data, tsk.List_key, stat)
 }
 
-func UpTaskStat(ops kvops.KVOp, tsk Task, stat string, who string) {
+func UpdateStat(ops kvops.KVOp, tsk Task, stat string, who string) {
 	ops.Set(cf.DotS(tsk.List_key, tsk.Uuid_key), stat)
 	cfmodule.UpdateStat(ops, tsk.Uuid_key, stat, who)
 }
 
-func AddTaskTo(ops kvops.KVOp, tsk Task, worker string) {
+func Stat(ops kvops.KVOp, tsk Task) string {
+	return cfmodule.GetStat(ops, tsk.Uuid_key)
+}
+
+func AddTo(ops kvops.KVOp, tsk Task, worker string) {
 	ops.Set(cf.DotS(worker, cf.K_AB_TASK, tsk.Uuid_key), tsk)
 }

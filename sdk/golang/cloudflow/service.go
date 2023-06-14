@@ -1,7 +1,7 @@
 package cloudflow
 
 import (
-	comm "cloudflow/sdk/golang/cloudflow/comm"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -16,10 +16,10 @@ type Service struct {
 	Uuid     string        `json:"uuid"`
 	Idx      int           `json:"index"`
 	SubIdx   int           `json:"subidx"`
-	KWArgs   []interface{} `json:"-"`
+	ExArgs   []interface{} `json:"-"`
 	InsCount int           `json:"inscount"`
 	CTime    int64         `json:"ctime"`
-	comm.CommStat
+	cf.CommStat
 }
 
 func (srv *Service) MarshalJSON() ([]byte, error) {
@@ -37,19 +37,19 @@ func (srv *Service) MarshalJSON() ([]byte, error) {
 
 var __srv_index__ int = 0
 
-func NewService(app *App, fc interface{}, name string, kwargs ...interface{}) *Service {
+func NewService(app *App, fc interface{}, name string, ex_args ...interface{}) *Service {
 	var srv = Service{
 		Name:     name,
 		App:      app,
 		Func:     fc,
 		Idx:      __srv_index__,
 		SubIdx:   0,
-		KWArgs:   kwargs,
+		ExArgs:   ex_args,
 		InsCount: 1,
-		CTime:    Timestamp(),
+		CTime:    cf.Timestamp(),
 	}
 	srv.Parent = "cfapp." + app.Uuid
-	srv.Cstat = K_STAT_WAIT
+	srv.Cstat = cf.K_STAT_WAIT
 	srv.AppUid = app.Uuid
 	app.Svrs = append(app.Svrs, &srv)
 	srv.UpdateUuid()
@@ -62,7 +62,7 @@ func (srv *Service) String() string {
 }
 
 func (srv *Service) UpdateUuid() {
-	srv.Uuid = AsMd5(srv.App.Uuid + ".services." + Itos(srv.Idx) + "." + Itos(srv.SubIdx))
+	srv.Uuid = cf.AsMd5(srv.App.Uuid + ".services." + cf.Itos(srv.Idx) + "." + cf.Itos(srv.SubIdx))
 }
 
 func (svr *Service) call(arg ...interface{}) interface{} {

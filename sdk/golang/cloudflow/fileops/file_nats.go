@@ -1,19 +1,30 @@
 package fileops
 
 import (
-	cf "cloudflow/sdk/golang/cloudflow"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 
 	"github.com/nats-io/nats.go"
 )
 
 type FileOpsNats struct {
-	nc    *nats.Conn
-	js    nats.JetStreamContext
-	scope string
+	connurl string
+	nc      *nats.Conn
+	js      nats.JetStreamContext
+	scope   string
 }
 
 func (self *FileOpsNats) Close() {
 	self.nc.Close()
+}
+
+func (self *FileOpsNats) Conn() bool {
+	nc, err := nats.Connect(self.connurl)
+	cf.Assert(err == nil, "connet Nats error: %s", err)
+	js, err := nc.JetStream()
+	cf.Assert(err == nil, "Create JetStream Error: %s", err)
+	self.nc = nc
+	self.js = js
+	return true
 }
 
 func (self *FileOpsNats) Put(key string, file_path string) bool {
@@ -32,6 +43,10 @@ func (self *FileOpsNats) Get(key string, target_path string) bool {
 	object := self.getObject()
 	val, err := self.getKV().Get(key)
 	if err != nil {
+		lis, _ := self.getObject().List()
+		for _, v := range lis {
+			cf.Log(">>>>", v)
+		}
 		cf.Assert(err == nil, "get key(%s) error:%s", key, err)
 		return false
 	}
@@ -84,8 +99,9 @@ func NewFileOpsNats(cnn_url string, scope string) *FileOpsNats {
 	cf.Assert(err == nil, "connet Nats error: %s", err)
 	js, err := nc.JetStream()
 	return &FileOpsNats{
-		nc:    nc,
-		js:    js,
-		scope: scope,
+		connurl: cnn_url,
+		nc:      nc,
+		js:      js,
+		scope:   scope,
 	}
 }

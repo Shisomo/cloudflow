@@ -1,4 +1,4 @@
-package cloudflow
+package comm
 
 import (
 	"bytes"
@@ -78,6 +78,14 @@ func EnvAPPPort() string {
 	return Env("CF_APP_PORT")
 }
 
+func EnvAPPIMP() string {
+	return Env("CF_APP_IMP")
+}
+
+func EnvAPPScope() string {
+	return Env("CF_APP_SCOPE")
+}
+
 func Assert(val bool, f string, msg ...interface{}) {
 	if !val {
 		_, path, line, _ := runtime.Caller(1)
@@ -120,6 +128,13 @@ func FrJson(data string) interface{} {
 	return v
 }
 
+func ListFrJson(data string) []interface{} {
+	var v []interface{}
+	err := json.Unmarshal([]byte(data), &v)
+	Assert(err == nil, "Unmarshal %s fail", data)
+	return v
+}
+
 func Json2Map(data string) map[string]interface{} {
 	ret := map[string]interface{}{}
 	err := json.Unmarshal([]byte(data), &ret)
@@ -143,6 +158,9 @@ func Base64En(msg string) string {
 }
 
 func Base64De(msg string) string {
+	if msg == "" {
+		return msg
+	}
 	decoded, err := base64.StdEncoding.DecodeString(msg)
 	Assert(err == nil, "Decode base64 error: %s", err)
 	return string(decoded)
@@ -167,30 +185,50 @@ func Astr(v interface{}) string {
 	return fmt.Sprint(v)
 }
 
-func SetCfg(cfg *map[string]interface{}, key string, value interface{}) {
+func SetCfg(cfg *CFG, key string, value interface{}) {
 	Assert(key != "", "key empty")
 	keys := strings.Split(key, ".")
 	keyl := len(keys)
 	for _, k := range keys[:keyl-1] {
-		v := (*cfg)[k].(map[string]interface{})
+		v := (*cfg)[k].(CFG)
 		cfg = &v
 	}
 	(*cfg)[keys[keyl-1]] = value
 }
 
-func GetCfg(cfg *map[string]interface{}, key string) interface{} {
+func GetCfg(cfg *CFG, key string) interface{} {
 	Assert(key != "", "key empty")
 	keys := strings.Split(key, ".")
 	keyl := len(keys)
 	for _, k := range keys[:keyl-1] {
-		v := (*cfg)[k].(map[string]interface{})
+		v := (*cfg)[k].(CFG)
 		cfg = &v
 	}
 	return (*cfg)[keys[keyl-1]]
 }
 
-func GetCfgC(cfg *map[string]interface{}, key string) map[string]interface{} {
-	return GetCfg(cfg, key).(map[string]interface{})
+func GetCfgC(cfg *CFG, key string) CFG {
+	return GetCfg(cfg, key).(CFG)
+}
+
+func convertCFG(y *CFG, x *map[string]interface{}) {
+	for k, v := range *x {
+		switch reflect.ValueOf(v).Type().Kind() {
+		case reflect.Map:
+			sub := CFG{}
+			tag := v.(map[string]interface{})
+			convertCFG(&sub, &tag)
+			(*y)[k] = sub
+		default:
+			(*y)[k] = v
+		}
+	}
+}
+
+func ConvertoCFG(d *map[string]interface{}) CFG {
+	a := CFG{}
+	convertCFG(&a, d)
+	return a
 }
 
 func NodeIP() []string {
@@ -277,3 +315,93 @@ func ByteHuman(size float64) string {
 	}
 	return fmt.Sprintf("%.2f TB", size/math.Pow(1024, 4))
 }
+
+func AsNatsConString(host string, port interface{}) string {
+	if strings.Contains(host, "/") && strings.Contains(host, ":") {
+		return host
+	}
+	return "nats://" + host + ":" + Astr(port)
+}
+
+func MergeCFG(cfg ...CFG) CFG {
+	if len(cfg) < 1 {
+		return CFG{}
+	}
+	ret := CFG{}
+	for _, m := range cfg {
+		for k, v := range m {
+			ret[k] = v
+		}
+	}
+	return ret
+}
+
+func MakeEtcdUrl(host string, port interface{}) string {
+	if strings.Contains(host, ":") || strings.Contains(host, "/") {
+		return host
+	}
+	return "http://" + host + ":" + Astr(port)
+}
+
+func MakeNatsUrl(host string, port interface{}) string {
+	if strings.Contains(host, ":") || strings.Contains(host, "/") {
+		return host
+	}
+	return "nats://" + host + ":" + Astr(port)
+}
+
+func FuncName(fc interface{}) string {
+	ref_fc := reflect.ValueOf(fc)
+	return runtime.FuncForPC(ref_fc.Pointer()).Name()
+}
+
+func ValueOfRefl(v reflect.Value) interface{} {
+	switch v.Kind() {
+	//case reflect.String:
+	//	return v.String()
+	case reflect.Bool:
+		return v.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int()
+	case reflect.Float32, reflect.Float64:
+		return v.Float()
+	default:
+		return v.Interface()
+	}
+}
+
+func FuncCall(fc interface{}, args []interface{}) []interface{} {
+	ref_fc := reflect.ValueOf(fc)
+	Assert(ref_fc.Kind() == reflect.Func, "need func")
+	args_types := ref_fc.Type()
+	args_count := args_types.NumIn()
+	Assert(args_count == len(args), "args count not match %d != %d", args_count, len(args))
+	args_value := make([]reflect.Value, args_count)
+	for i := range args_value {
+		v := args[i]
+		if v == nil {
+			args_value[i] = v.(reflect.Value)
+			continue
+		}
+		val := reflect.ValueOf(v)
+		val_type := val.Kind()
+		ned_type := args_types.In(i).Kind()
+		Assert(val_type == ned_type, "type not match: %s != %s for: %s", val_type, ned_type, FuncName(fc))
+		args_value[i] = val
+	}
+	ret := ref_fc.Call(args_value)
+	ret_num := len(ret)
+	ned_num := args_types.NumOut()
+	Assert(ret_num == ned_num, "output number(%d) error != %d", ret_num, ned_num)
+	data := make([]interface{}, ret_num)
+	for i, v := range ret {
+		data[i] = v.Interface() //ValueOfRefl(v)
+	}
+	return data
+}
+
+func FmStr(f string, a ...interface{}) string {
+	return fmt.Sprintf(f, a...)
+}
+
+type CFG map[string]interface{}

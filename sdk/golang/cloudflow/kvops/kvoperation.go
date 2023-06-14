@@ -1,7 +1,8 @@
 package kvops
 
 import (
-	cf "cloudflow/sdk/golang/cloudflow"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
+	"strings"
 	"time"
 )
 
@@ -11,9 +12,23 @@ type KVOp interface {
 	Del(key string) bool
 	SetKV(Kv map[string]interface{}, ignore_empty bool) bool
 	GetKs(Kv []string, ignore_empty bool) map[string]interface{}
+	Host() string
+	Port() int
+	Imp() string
+	Scope() string
 }
 
 func GetKVOpImp(imp string, cfg map[string]interface{}) KVOp {
+	switch imp {
+	case "etcd":
+		host := cfg["host"].(string)
+		port := cfg["port"]
+		scop := cfg["scope"].(string)
+		conn := strings.Split(cf.MakeEtcdUrl(host, port), ",")
+		return NewEtcDOps(conn, scop)
+	default:
+		cf.Assert(false, "KV %s not support", imp)
+	}
 	return nil
 }
 

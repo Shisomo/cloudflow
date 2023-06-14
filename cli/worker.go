@@ -3,7 +3,7 @@ package cli
 import (
 	it "cloudflow/internal"
 	"cloudflow/internal/worker"
-	cf "cloudflow/sdk/golang/cloudflow"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -19,7 +19,7 @@ var CMD_Worker = &cobra.Command{
 		cf.SetCfg(&cfg, "cf.app_nid", app_nodeid)
 		flow := it.NewCloudFlow(&cfg)
 		flow.StartService()
-		worker.StartWorker(cf.GetCfgC(&cfg, "cf.worker"), flow.StateSrv)
+		worker.StartWorker(cf.GetCfgC(&cfg, "cf.worker"), cf.GetCfgC(&cfg, "cf.services.fstore"), flow.StateSrv)
 		for {
 			time.Sleep(time.Second)
 		}

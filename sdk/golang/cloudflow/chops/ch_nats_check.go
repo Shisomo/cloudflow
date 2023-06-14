@@ -1,7 +1,7 @@
 package chops
 
 import (
-	cf "cloudflow/sdk/golang/cloudflow"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"strings"
 )
 

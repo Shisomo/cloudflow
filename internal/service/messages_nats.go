@@ -2,8 +2,8 @@ package service
 
 import (
 	"bytes"
-	cf "cloudflow/sdk/golang/cloudflow"
 	ch "cloudflow/sdk/golang/cloudflow/chops"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"os/exec"
 )
 

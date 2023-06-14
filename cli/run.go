@@ -2,7 +2,7 @@ package cli
 
 import (
 	it "cloudflow/internal"
-	cf "cloudflow/sdk/golang/cloudflow"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 
 	"github.com/spf13/cobra"
 )
@@ -11,11 +11,11 @@ var app_scope string
 var app_nodeid string
 
 var CMD_Run = &cobra.Command{
-	Use:     "run <app_id> <app_cfg> <app_exec_file>",
+	Use:     "run <app_id> <app_cfg> <app_exec_file> <app_args>",
 	Short:   "launch a cloudflow application/node",
 	Long:    "run is ...., long description",
 	Aliases: []string{"r"},
-	Args:    cobra.ExactArgs(3),
+	Args:    cobra.RangeArgs(3, 4),
 	Run: func(cmd *cobra.Command, args []string) {
 		// init config
 		cfg := GetAppCfg()
@@ -25,7 +25,11 @@ var CMD_Run = &cobra.Command{
 		flow := it.NewCloudFlow(&cfg)
 		flow.StartService()
 		flow.StartSchAndWorker()
-		flow.SubmitApp(args[0], args[1], args[2], app_nodeid)
+		app_args := ""
+		if len(args) == 4 {
+			app_args = args[3]
+		}
+		flow.SubmitApp(args[0], args[1], args[2], app_args, app_nodeid)
 	},
 }
 

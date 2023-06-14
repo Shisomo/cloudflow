@@ -11,7 +11,7 @@ done
 ETCDCTL_API=3 etcdctl del "" --prefix
 
 # start worker and  
-(bash script/cloudflow.bash worker 1>log/worker.log 2>log/worker.err)&
+#(bash script/cloudflow.bash worker 1>log/worker.log 2>log/worker.err)&
 (bash script/cloudflow.bash sc 1>log/scheduler.log 2>log/scheduler.err)&
 
 

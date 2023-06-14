@@ -1,7 +1,7 @@
 package cli
 
 import (
-	cf "cloudflow/sdk/golang/cloudflow"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -19,7 +19,7 @@ var CMD_Config = &cobra.Command{
 	},
 }
 
-func LoadCfg(file string) map[string]interface{} {
+func LoadCfg(file string) cf.CFG {
 	cuser, err := user.Current()
 	cf.Assert(err == nil, "Get current user fail: %s", err)
 	default_cfgs := []string{
@@ -42,12 +42,12 @@ func LoadCfg(file string) map[string]interface{} {
 	cf.Assert(file != "", "config file not find:%s", file)
 	data, err := ioutil.ReadFile(file)
 	cf.Assert(err == nil, "Read file(%s) error:%s", file, err)
-	var cfg_data map[string]interface{}
+	var cfg_data cf.CFG
 	yaml.Unmarshal(data, &cfg_data)
 	return cfg_data
 }
 
-func GetAppCfg() map[string]interface{} {
+func GetAppCfg() cf.CFG {
 	cfg := LoadCfg(Cf_file)
 	// overwrite
 	if Cf_host != "" {

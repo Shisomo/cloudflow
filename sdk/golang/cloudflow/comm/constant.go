@@ -1,4 +1,4 @@
-package cloudflow
+package comm
 
 const K_CF_SCHEDUS = "cfschedus"
 const K_CF_WORKERS = "cfworkers"
@@ -26,3 +26,5 @@ const K_MEMBER_SUB_INDX = "subidx"
 const K_MEMBER_PARENT = "parent"
 const K_MEMBER_EXEC = "exec"
 const K_MEMBER_APPUID = "appuid"
+const K_MEMBER_APPARGS = "appargs"
+const K_MEMBER_RUNCFG = "runcfg"

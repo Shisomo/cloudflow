@@ -1,7 +1,7 @@
 package cli
 
 import (
-	cf "cloudflow/sdk/golang/cloudflow"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"fmt"
 	"sort"
 	"strings"

@@ -2,15 +2,21 @@ package worker
 
 import (
 	"cloudflow/internal/task"
-	cf "cloudflow/sdk/golang/cloudflow"
 	"cloudflow/sdk/golang/cloudflow/cfmodule"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
+	"cloudflow/sdk/golang/cloudflow/fileops"
 	"cloudflow/sdk/golang/cloudflow/kvops"
+	"os"
+	"os/exec"
+	"path"
 	"strings"
 	"time"
 )
 
 type DumyWorker struct {
 	cfmodule.StateCfModule
+	FileCfg cf.CFG                     `json:"-"`
+	FileOps map[string]fileops.FileOps `json:"-"`
 }
 
 func (wk *DumyWorker) Run() {
@@ -26,10 +32,14 @@ func (wk *DumyWorker) Run() {
 			// find new tasks mark.sch tag and assigne to worker
 			time.Sleep(5 * time.Second)
 			for _, tsk := range tasks {
-				if strings.Contains(tsk.Uuid_key, "-") {
-					cf.Log("regject task:", tsk.Uuid_key)
-					wk.Kvops.Del(cf.DotS(cf.K_AB_WORKER, wk.Uuid, cf.K_AB_TASK, tsk.Uuid_key))
-					task.UpTaskStat(wk.Kvops, tsk, cf.K_STAT_WAIT, wk.StateCfModule.Uuid)
+				if task.Stat(wk.Kvops, tsk) == cf.K_STAT_PEDD {
+					name := wk.Kvops.Get(cf.DotS(tsk.Uuid_key, "name")).(string)
+					if strings.Contains(name, "read") || strings.Contains(name, "count") {
+						if strings.Contains(tsk.Uuid_key, "-") {
+							continue
+						}
+						wk.RunTask(tsk)
+					}
 				}
 			}
 			time.Sleep(5 * time.Second)
@@ -37,12 +47,59 @@ func (wk *DumyWorker) Run() {
 	}()
 }
 
-func RunTask(kvops, task task.Task) {
-	// pass
+func (wk *DumyWorker) RunTask(tsk task.Task) {
+	// change task stat
+	cf.Log("run task:", tsk.Uuid_key)
+	task.UpdateStat(wk.Kvops, tsk, cf.K_STAT_STAR, wk.Uuid)
+	worker_dir, err := os.MkdirTemp("/tmp/", tsk.Uuid_key+".*")
+	cf.Assert(err == nil, "Create Temp dir fail:%s", err)
+	defer os.RemoveAll(worker_dir)
+	// get app key and app args
+	app_id := wk.Kvops.Get(cf.DotS(tsk.Uuid_key, cf.K_MEMBER_APPUID)).(string)
+	exec_app_args := wk.Kvops.Get(cf.DotS(cf.K_AB_CFAPP, app_id, cf.K_MEMBER_APPARGS)).(string)
+	exec_file_key := cf.DotS(cf.K_AB_CFAPP, app_id, cf.K_MEMBER_EXEC)
+	exec_file_path := path.Join(worker_dir, app_id)
+	// download
+	fileops := wk.getFileOp(tsk)
+	cf.Log("download exec file:", exec_file_key, "to", worker_dir)
+	fileops.Get(exec_file_key, exec_file_path)
+	os.Chmod(exec_file_path, 0777)
+	// run task
+	cmd := exec.Command(exec_file_path, strings.Split(cf.Base64De(exec_app_args), " ")...)
+	cmd.Env = append(cmd.Env, []string{
+		"CF_APP_UUID=" + app_id,
+		"CF_APP_HOST=" + wk.Kvops.Host(),
+		"CF_APP_PORT=" + cf.Astr(wk.Kvops.Port()),
+		"CF_APP_IMP=" + cf.Astr(wk.Kvops.Imp()),
+		"CF_APP_SCOPE=" + cf.Astr(wk.Kvops.Scope()),
+		"CF_NODE_UUID=" + tsk.Uuid_key,
+	}...)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	err = cmd.Start()
+	cf.Assert(err == nil, "run: %s fail: %s", exec_file_path, err)
+	cf.Log("worker[", wk.Uuid, "] start:", cmd.String())
+	//cmd.Wait()
 }
 
-func NewDumyWorker(kvops kvops.KVOp) cfmodule.CfModuleOps {
-	worker := DumyWorker{}
+func (wk *DumyWorker) getFileOp(task task.Task) fileops.FileOps {
+	app_id := wk.Kvops.Get(cf.DotS(task.Uuid_key, cf.K_MEMBER_APPUID)).(string)
+	key := cf.DotS(cf.K_AB_CFAPP, app_id)
+	fops, err := wk.FileOps[key]
+	if !err {
+		fops = fileops.GetFileOps(key, wk.FileCfg)
+		wk.FileOps[key] = fops
+	} else {
+		fops.Conn()
+	}
+	return fops
+}
+
+func NewDumyWorker(kvops kvops.KVOp, filecfg cf.CFG) cfmodule.CfModuleOps {
+	worker := DumyWorker{
+		FileCfg: filecfg,
+		FileOps: map[string]fileops.FileOps{},
+	}
 	worker.StateCfModule = cfmodule.NewStateCfModule(kvops, "DumyWorker", "a dumy worker")
 	return &worker
 }

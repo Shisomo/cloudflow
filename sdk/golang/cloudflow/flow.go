@@ -1,7 +1,7 @@
 package cloudflow
 
 import (
-	comm "cloudflow/sdk/golang/cloudflow/comm"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"fmt"
 )
 
@@ -12,7 +12,7 @@ type Flow struct {
 	Nodes []*Node  `json:"node"`
 	Idx   int      `json:"index"`
 	CTime int64    `json:"ctime"`
-	comm.CommStat
+	cf.CommStat
 }
 
 var __flow_index__ int = 0
@@ -20,10 +20,10 @@ var __flow_index__ int = 0
 func NewFlow(se *Session, name string) *Flow {
 	flow := Flow{
 		Name:  name,
-		Uuid:  AsMd5(se.Uuid + Itos(__flow_index__)),
+		Uuid:  cf.AsMd5(se.Uuid + cf.Itos(__flow_index__)),
 		Sess:  se,
 		Idx:   __flow_index__,
-		CTime: Timestamp(),
+		CTime: cf.Timestamp(),
 		Nodes: []*Node{},
 	}
 	__flow_index__ += 1
@@ -36,11 +36,11 @@ func (f *Flow) String() string {
 	return fmt.Sprintf("Fow(%s, %s)", f.Uuid, f.Name)
 }
 
-func (flow *Flow) Add(fc interface{}, name string, kwargs ...interface{}) *Node {
+func (flow *Flow) Add(fc interface{}, name string, ex_args ...interface{}) *Node {
 	var new_node = NewNode(flow, map[string]interface{}{
 		"Name":     name,
 		"Func":     fc,
-		"KWArgs":   kwargs,
+		"ExArgs":   ex_args,
 		"InsCount": 1,
 		"Synchz":   false,
 	})

@@ -2,7 +2,7 @@ package service
 
 import (
 	"bytes"
-	cf "cloudflow/sdk/golang/cloudflow"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 	kv "cloudflow/sdk/golang/cloudflow/kvops"
 	"os/exec"
 	"strings"
@@ -127,4 +127,20 @@ func (se *StateEtcd) SetKV(Kv map[string]interface{}, ignore_empty bool) bool {
 
 func (se *StateEtcd) GetKs(Kv []string, ignore_empty bool) map[string]interface{} {
 	return se.EtcdOps.GetKs(Kv, ignore_empty)
+}
+
+func (se *StateEtcd) Host() string {
+	return se.EtcdOps.Host()
+}
+
+func (se *StateEtcd) Port() int {
+	return se.EtcdOps.Port()
+}
+
+func (se *StateEtcd) Imp() string {
+	return se.EtcdOps.Imp()
+}
+
+func (se *StateEtcd) Scope() string {
+	return se.EtcdOps.Scope()
 }

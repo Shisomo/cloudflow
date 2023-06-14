@@ -1,8 +1,7 @@
 package cfmodule
 
 import (
-	cf "cloudflow/sdk/golang/cloudflow"
-	"cloudflow/sdk/golang/cloudflow/comm"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"cloudflow/sdk/golang/cloudflow/kvops"
 )
 
@@ -11,7 +10,7 @@ type StateCfModule struct {
 	Name  string     `json:"name"`
 	CTime int64      `json:"ctime"`
 	Kvops kvops.KVOp `json:"-"`
-	comm.CommStat
+	cf.CommStat
 }
 
 func NewStateCfModule(kvops kvops.KVOp, name string, desc string) StateCfModule {
@@ -20,7 +19,7 @@ func NewStateCfModule(kvops kvops.KVOp, name string, desc string) StateCfModule 
 		Name:  name + "-" + cf.AsMd5(cf.TimestampStr()),
 		Uuid:  cf.AsMd5(cf.AppID() + name + cf.TimestampStr()),
 		CTime: cf.Timestamp(),
-		CommStat: comm.CommStat{
+		CommStat: cf.CommStat{
 			Descr: desc,
 			Host:  cf.NodeID(),
 		},

@@ -3,7 +3,7 @@ package cli
 import (
 	it "cloudflow/internal"
 	"cloudflow/internal/schedule"
-	cf "cloudflow/sdk/golang/cloudflow"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"time"
 
 	"github.com/spf13/cobra"

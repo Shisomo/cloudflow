@@ -1,7 +1,7 @@
 package service
 
 import (
-	cf "cloudflow/sdk/golang/cloudflow"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 )
 
 type MessageOps interface {

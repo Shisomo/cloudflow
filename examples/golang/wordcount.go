@@ -2,6 +2,7 @@ package main
 
 import (
 	cf "cloudflow/sdk/golang/cloudflow"
+	"cloudflow/sdk/golang/cloudflow/comm"
 )
 
 func statistics(app *cf.App) map[string]int {
@@ -25,12 +26,12 @@ func reducewords(se *cf.Session, st map[string]int) map[string]int {
 }
 
 func main() {
-	cf.LogSetPrefix("test-word-count ")
-	cf.Log("Version", cf.Version())
+	comm.LogSetPrefix("test-word-count ")
+	comm.Log("Version", comm.Version())
 	var app = cf.NewApp("test-app")
 	var ses = app.CreateSession("session-1")
 	var flw = ses.CreateFlow("flow-1")
 	app.Reg(statistics, "record the process")
-	flw.Add(readwords, "read", 1e8).Map(countwords, "count", 10).Reduce(reducewords, "reduce")
+	flw.Add(readwords, "read", int64(1e8)).Map(countwords, "count", 10).Reduce(reducewords, "reduce")
 	app.Run()
 }

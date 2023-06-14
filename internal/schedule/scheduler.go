@@ -1,12 +1,12 @@
 package schedule
 
 import (
-	cf "cloudflow/sdk/golang/cloudflow"
 	"cloudflow/sdk/golang/cloudflow/cfmodule"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"cloudflow/sdk/golang/cloudflow/kvops"
 )
 
-func StartScheduler(cfg map[string]interface{}, ops kvops.KVOp) {
+func StartScheduler(cfg cf.CFG, ops kvops.KVOp) {
 	imp := cfg["imp"]
 	switch imp {
 	case "dumy_scheduler":
@@ -16,7 +16,7 @@ func StartScheduler(cfg map[string]interface{}, ops kvops.KVOp) {
 	}
 }
 
-func TryStartSchduler(cfg map[string]interface{}, ops kvops.KVOp) {
+func TryStartSchduler(cfg cf.CFG, ops kvops.KVOp) {
 	sche := cfmodule.ListKeys(ops, cf.K_CF_SCHEDUS, cf.K_STAT_WORK)
 	if len(sche) < 1 {
 		cf.Log("no schadulers find, create new one")

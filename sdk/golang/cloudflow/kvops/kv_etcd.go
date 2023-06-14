@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	cf "cloudflow/sdk/golang/cloudflow"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
@@ -32,6 +32,22 @@ func NewEtcDOps(connUrls []string, scope string) *EtcDOps {
 	cf.Assert(rkey == check_key, "verify etcd fail: %s != %s", check_key, rkey)
 	ops.Del(check_key)
 	return &ops
+}
+
+func (ops *EtcDOps) Host() string {
+	return strings.Join(ops.cli.Endpoints(), ",")
+}
+
+func (ops *EtcDOps) Imp() string {
+	return "etcd"
+}
+
+func (ops *EtcDOps) Scope() string {
+	return ops.scope
+}
+
+func (ops *EtcDOps) Port() int {
+	return -1
 }
 
 func (ops *EtcDOps) contex() (context.Context, context.CancelFunc) {

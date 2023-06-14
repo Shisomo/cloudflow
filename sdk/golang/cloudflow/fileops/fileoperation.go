@@ -1,7 +1,7 @@
 package fileops
 
 import (
-	cf "cloudflow/sdk/golang/cloudflow"
+	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"strings"
 )
 
@@ -9,6 +9,7 @@ type FileOps interface {
 	Put(file_name string, file_path string) bool
 	Get(file_name string, file_path string) bool
 	Close()
+	Conn() bool
 	Clear() bool
 }
 

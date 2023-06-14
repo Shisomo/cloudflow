@@ -1,6 +1,6 @@
 package cloudflow
 
-import comm "cloudflow/sdk/golang/cloudflow/comm"
+import cf "cloudflow/sdk/golang/cloudflow/comm"
 
 type Session struct {
 	Name  string  `json:"name"`
@@ -9,7 +9,7 @@ type Session struct {
 	Flows []*Flow `json:"flow"`
 	Idx   int     `json:"index"`
 	CTime int64   `json:"ctime"`
-	comm.CommStat
+	cf.CommStat
 }
 
 var __session_index__ int = 0
@@ -17,10 +17,10 @@ var __session_index__ int = 0
 func NewSession(app *App, name string) *Session {
 	ses := Session{
 		Name:  name,
-		Uuid:  AsMd5(app.Uuid + Itos(__session_index__)),
+		Uuid:  cf.AsMd5(app.Uuid + cf.Itos(__session_index__)),
 		App:   app,
 		Idx:   __session_index__,
-		CTime: Timestamp(),
+		CTime: cf.Timestamp(),
 		Flows: []*Flow{},
 	}
 	ses.Parent = "cfapp." + app.Uuid
