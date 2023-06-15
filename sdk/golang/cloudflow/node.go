@@ -10,6 +10,7 @@ import (
 )
 
 type Node struct {
+	IsExit   bool          `json:"-"`
 	Name     string        `json:"name"`
 	Func     interface{}   `json:"-"`
 	Flow     *Flow         `json:"-"`
@@ -46,9 +47,10 @@ var __node_index__ int = 0
 
 func NewNode(flow *Flow, kw ...map[string]interface{}) *Node {
 	var node = Node{
-		Idx:   __node_index__,
-		Flow:  flow,
-		CTime: cf.Timestamp(),
+		IsExit: false,
+		Idx:    __node_index__,
+		Flow:   flow,
+		CTime:  cf.Timestamp(),
 	}
 	__node_index__ += 1
 	node.Update(kw...)
@@ -101,4 +103,8 @@ func (node *Node) Map(fc interface{}, name string, count int, ex_args ...interfa
 
 func (node *Node) Reduce(fc interface{}, name string, ex_args ...interface{}) *Node {
 	return node.append(fc, name, ex_args)
+}
+
+func (node *Node) GetSession() *Session {
+	return node.Flow.Sess
 }

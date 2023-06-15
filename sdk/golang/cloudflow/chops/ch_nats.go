@@ -52,7 +52,8 @@ func (nt *NatsChOp) Watch(ch_name []string, fc func(worker string, subj string, 
 	for _, sb := range nt.toSubjects(ch_name) {
 		cs_key := cf.AsMd5(sb)
 		sub, err := nt.js.QueueSubscribe(sb, cs_key, func(m *nats.Msg) {
-			fc(cs_key, m.Subject, string(m.Data))
+			subject := strings.Replace(m.Subject, nt.chprefix+".", "", 1)
+			fc(cs_key, subject, string(m.Data))
 			m.Ack()
 		}, nats.AckExplicit())
 		cf.Assert(err == nil, "create QueueSubscribe(subj: %s) fail: %s", sb, err)

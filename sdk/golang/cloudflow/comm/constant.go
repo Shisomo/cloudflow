@@ -28,3 +28,6 @@ const K_MEMBER_EXEC = "exec"
 const K_MEMBER_APPUID = "appuid"
 const K_MEMBER_APPARGS = "appargs"
 const K_MEMBER_RUNCFG = "runcfg"
+
+const K_MESSAGE_EXIT = "EXIT"
+const K_MESSAGE_NORM = "NORM"

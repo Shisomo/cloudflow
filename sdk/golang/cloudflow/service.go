@@ -10,6 +10,7 @@ import (
 )
 
 type Service struct {
+	IsExit   bool          `json:"-"`
 	Name     string        `json:"name"`
 	App      *App          `json:"-"`
 	Func     interface{}   `json:"-"`
@@ -39,6 +40,7 @@ var __srv_index__ int = 0
 
 func NewService(app *App, fc interface{}, name string, ex_args ...interface{}) *Service {
 	var srv = Service{
+		IsExit:   false,
 		Name:     name,
 		App:      app,
 		Func:     fc,

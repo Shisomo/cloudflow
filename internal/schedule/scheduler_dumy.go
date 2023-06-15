@@ -41,13 +41,13 @@ func (sch *DumySche) Run() {
 				if inst_count < 0 {
 					// auto scale: FIXME
 					inst_count = runtime.NumCPU() - 1
-					cf.Log("auto sacle to", inst_count, "instances")
+					cf.Log("auto sacle to", inst_count+1, "instances")
 				}
 				if inst_count > 0 {
 					if int(cfmodule.GetVal(sch.Kvops, tsk.Uuid_key, cf.K_MEMBER_SUB_INDX).(float64)) == 0 {
 						// copy instances
-						cfmodule.SetVal(sch.Kvops, inst_count, tsk.Uuid_key, cf.K_MEMBER_INSCOUNT)
-						cf.Log("copy task", tsk.Uuid_key, "as", inst_count, "ones")
+						cfmodule.SetVal(sch.Kvops, inst_count+1, tsk.Uuid_key, cf.K_MEMBER_INSCOUNT)
+						cf.Log("copy task", tsk.Uuid_key, "as", inst_count+1, "ones")
 						task.CopyTasks(sch.Kvops, tsk, inst_count, cf.K_STAT_WAIT)
 					}
 				}

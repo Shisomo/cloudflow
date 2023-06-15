@@ -135,6 +135,13 @@ func ListFrJson(data string) []interface{} {
 	return v
 }
 
+func MapFrJson(data string) map[string]interface{} {
+	var v map[string]interface{}
+	err := json.Unmarshal([]byte(data), &v)
+	Assert(err == nil, "Unmarshal %s fail", data)
+	return v
+}
+
 func Json2Map(data string) map[string]interface{} {
 	ret := map[string]interface{}{}
 	err := json.Unmarshal([]byte(data), &ret)
@@ -355,19 +362,62 @@ func FuncName(fc interface{}) string {
 	return runtime.FuncForPC(ref_fc.Pointer()).Name()
 }
 
-func ValueOfRefl(v reflect.Value) interface{} {
-	switch v.Kind() {
-	//case reflect.String:
-	//	return v.String()
-	case reflect.Bool:
-		return v.Bool()
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return v.Int()
-	case reflect.Float32, reflect.Float64:
-		return v.Float()
-	default:
-		return v.Interface()
+func FuncEmptyRet(fc interface{}) []interface{} {
+	ret_num := reflect.ValueOf(fc).Type().NumOut()
+	ret := make([]interface{}, ret_num)
+	for i := range ret {
+		ret[i] = nil
 	}
+	return ret
+}
+
+// convert json type to target type
+// Need supported types:
+// Int* 8, 16, 32, 64
+// Uint* 8, 16, 32, 64
+// Float32
+// Array
+// Interface
+// Map
+// Slice
+// Struct
+func JAsType(source interface{}, tgt reflect.Type) interface{} {
+	//src_kind := reflect.ValueOf(source).Kind()
+	kind := tgt.Kind()
+	switch kind {
+	case reflect.Int:
+		return int(source.(float64))
+	default:
+		return source
+	}
+}
+
+func copyAs(data interface{}, tgt reflect.Type) interface{} {
+	var ret interface{}
+	kind := tgt.Kind()
+	v_type := tgt.Elem()
+	ret_ref := reflect.ValueOf(ret)
+	switch kind {
+	case reflect.Slice:
+		data := data.([]interface{})
+		length := len(data)
+		ret_ref.Set(reflect.MakeSlice(v_type, length, length))
+		for i := range data {
+			ret_ref.Index(i).Set(reflect.ValueOf(copyAs(&data[i], v_type)))
+		}
+		return ret_ref.Elem()
+	case reflect.Map:
+		data := data.(map[string]interface{})
+		ret_ref.Set(reflect.MakeMap(v_type))
+		for k, v := range data {
+			ret_ref.SetMapIndex(reflect.ValueOf(k), reflect.ValueOf(copyAs(v, v_type)))
+		}
+	case reflect.Bool:
+		return bool(ret.(bool))
+	case reflect.Int:
+		return int(ret.(float64))
+	}
+	return ret
 }
 
 func FuncCall(fc interface{}, args []interface{}) []interface{} {
@@ -383,10 +433,11 @@ func FuncCall(fc interface{}, args []interface{}) []interface{} {
 			args_value[i] = v.(reflect.Value)
 			continue
 		}
+		ned_type := args_types.In(i).Kind()
+		v = JAsType(v, ned_type)
 		val := reflect.ValueOf(v)
 		val_type := val.Kind()
-		ned_type := args_types.In(i).Kind()
-		Assert(val_type == ned_type, "type not match: %s != %s for: %s", val_type, ned_type, FuncName(fc))
+		Assert(val_type == ned_type, "type not match: %s !=> %s for: %s (%s)", val_type, ned_type, FuncName(fc), v)
 		args_value[i] = val
 	}
 	ret := ref_fc.Call(args_value)
@@ -402,6 +453,50 @@ func FuncCall(fc interface{}, args []interface{}) []interface{} {
 
 func FmStr(f string, a ...interface{}) string {
 	return fmt.Sprintf(f, a...)
+}
+
+func MakeMsg(index int, data []interface{}, cdata string) string {
+	cl_data := map[string]interface{}{
+		"index":     index,
+		"lang_type": "golang",
+		"lang_name": runtime.Version(),
+		"ctrl_data": cdata,
+		"app_data":  data,
+	}
+	return Base64En(AsJson(cl_data))
+}
+
+func ParsMsg(data string) map[string]interface{} {
+	return MapFrJson(Base64De(data))
+}
+
+func ZipAppend(data [][]interface{}, value []interface{}) [][]interface{} {
+	// [A[...], B[...]] <= [A, B]
+	if len(data) < 1 {
+		ret := make([][]interface{}, len(value))
+		for i, v := range value {
+			ret[i] = []interface{}{v}
+		}
+		return ret
+	}
+	for i, v := range value {
+		data[i] = append(data[i], v)
+	}
+	return data
+}
+
+func SzOneDim(data [][]interface{}, sz bool) []interface{} {
+	// [A[..], B[..], ...] => [A, B, C[...]]
+	ret := make([]interface{}, len(data))
+	for i, v := range data {
+		if sz {
+			Assert(len(v) == 1, "size need be 1: %s", v)
+			ret[i] = v[0]
+		} else {
+			ret[i] = v
+		}
+	}
+	return ret
 }
 
 type CFG map[string]interface{}

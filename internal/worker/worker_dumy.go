@@ -33,13 +33,7 @@ func (wk *DumyWorker) Run() {
 			time.Sleep(5 * time.Second)
 			for _, tsk := range tasks {
 				if task.Stat(wk.Kvops, tsk) == cf.K_STAT_PEDD {
-					name := wk.Kvops.Get(cf.DotS(tsk.Uuid_key, "name")).(string)
-					if strings.Contains(name, "read") || strings.Contains(name, "count") {
-						if strings.Contains(tsk.Uuid_key, "-") {
-							continue
-						}
-						wk.RunTask(tsk)
-					}
+					wk.RunTask(tsk)
 				}
 			}
 			time.Sleep(5 * time.Second)
