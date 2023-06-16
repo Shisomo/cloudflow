@@ -7,22 +7,28 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"time"
 )
 
 type Node struct {
-	IsExit   bool          `json:"-"`
-	Name     string        `json:"name"`
-	Func     interface{}   `json:"-"`
-	Flow     *Flow         `json:"-"`
-	Uuid     string        `json:"uuid"`
-	Idx      int           `json:"index"`
-	SubIdx   int           `json:"subidx"`
-	PreNodes []*Node       `json:"-"`
-	NexNodes []*Node       `json:"-"`
-	ExArgs   []interface{} `json:"-"`
-	Synchz   bool          `json:"synchz"`
-	InsCount int           `json:"inscount"`
-	CTime    int64         `json:"ctime"`
+	IsExit    bool          `json:"-"`
+	Name      string        `json:"name"`
+	Func      interface{}   `json:"-"`
+	Flow      *Flow         `json:"-"`
+	Uuid      string        `json:"uuid"`
+	Idx       int           `json:"index"`
+	SubIdx    int           `json:"subidx"`
+	PreNodes  []*Node       `json:"-"`
+	NexNodes  []*Node       `json:"-"`
+	ExArgs    []interface{} `json:"-"`
+	Synchz    bool          `json:"synchz"`
+	InsCount  int           `json:"inscount"`
+	CTime     int64         `json:"ctime"`
+	UserData  interface{}   `json:"-"`
+	startTime int64         `json:"-"`
+	callCount int64         `json:"-"`
+	recTime   int64         `json:"-"`
+	recCount  int64         `json:"-"`
 	cf.CommStat
 }
 
@@ -47,10 +53,11 @@ var __node_index__ int = 0
 
 func NewNode(flow *Flow, kw ...map[string]interface{}) *Node {
 	var node = Node{
-		IsExit: false,
-		Idx:    __node_index__,
-		Flow:   flow,
-		CTime:  cf.Timestamp(),
+		IsExit:   false,
+		Idx:      __node_index__,
+		Flow:     flow,
+		CTime:    cf.Timestamp(),
+		UserData: nil,
 	}
 	__node_index__ += 1
 	node.Update(kw...)
@@ -109,4 +116,46 @@ func (node *Node) Reduce(fc interface{}, name string, sync bool, ex_args ...inte
 
 func (node *Node) GetSession() *Session {
 	return node.Flow.Sess
+}
+
+func (node *Node) Exit() {
+	if len(node.PreNodes) > 0 {
+		cf.Log("Only data node can exit by self")
+		return
+	}
+	node.IsExit = true
+}
+
+func (node *Node) StartCall() {
+	node.callCount = 0
+	node.startTime = cf.Timestamp()
+	node.recCount = 0
+	node.recTime = cf.Timestamp()
+}
+
+func (node *Node) TimeFromStart() int64 {
+	return cf.Timestamp() - node.startTime
+}
+
+func (node *Node) TimeFromStartSecond() int64 {
+	return node.TimeFromStart() / int64(time.Second)
+}
+
+func (node *Node) CallSpeed(reset bool) float64 {
+	now_time := cf.Timestamp()
+	deta := (now_time - node.recTime)
+	speed := float64(time.Second) * float64(node.callCount-node.recCount) / float64(deta)
+	if reset {
+		node.recCount = node.callCount
+		node.recTime = now_time
+	}
+	return speed
+}
+
+func (node *Node) PreCall() {
+	node.callCount += 1
+}
+
+func (node *Node) CallCount() int64 {
+	return node.callCount
 }

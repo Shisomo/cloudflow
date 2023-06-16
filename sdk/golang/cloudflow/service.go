@@ -19,6 +19,7 @@ type Service struct {
 	SubIdx   int           `json:"subidx"`
 	ExArgs   []interface{} `json:"-"`
 	InsCount int           `json:"inscount"`
+	UserData interface{}   `json:"-"`
 	CTime    int64         `json:"ctime"`
 	cf.CommStat
 }
@@ -49,6 +50,7 @@ func NewService(app *App, fc interface{}, name string, ex_args ...interface{}) *
 		ExArgs:   ex_args,
 		InsCount: 1,
 		CTime:    cf.Timestamp(),
+		UserData: nil,
 	}
 	srv.Parent = "cfapp." + app.Uuid
 	srv.Cstat = cf.K_STAT_WAIT

@@ -28,8 +28,11 @@ func (sch *DumySche) Run() {
 				time.Sleep(5 * time.Second)
 				continue
 			}
-
 			tasks := task.GetAllTasks(sch.Kvops, cf.K_STAT_WAIT)
+			if len(tasks) < 1 {
+				time.Sleep(5 * time.Second)
+				continue
+			}
 			cf.Log("find all", cf.K_STAT_WAIT, "tasks:", len(tasks))
 
 			// copy tasks

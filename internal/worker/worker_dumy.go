@@ -26,17 +26,17 @@ func (wk *DumyWorker) Run() {
 	go func() {
 		for {
 			// check task queue
-			tasks := ListTasks(wk.Kvops, wk.Uuid)
+			tasks := FilterTaskByStat(wk.Kvops, ListTasks(wk.Kvops, wk.Uuid), cf.K_STAT_PEDD)
+			if len(tasks) < 1 {
+				time.Sleep(2 * time.Second)
+				continue
+			}
 			cf.Log("find launch tasks:", len(tasks))
 			// watch key + timeout
 			// find new tasks mark.sch tag and assigne to worker
-			time.Sleep(5 * time.Second)
 			for _, tsk := range tasks {
-				if task.Stat(wk.Kvops, tsk) == cf.K_STAT_PEDD {
-					wk.RunTask(tsk)
-				}
+				wk.RunTask(tsk)
 			}
-			time.Sleep(5 * time.Second)
 		}
 	}()
 }

@@ -114,6 +114,24 @@ func (app *App) IsExit(ntype string, node_srv interface{}) bool {
 	return false
 }
 
+func (app *App) startCall(ntype, ins interface{}) {
+	switch ntype {
+	case cf.K_AB_NODE:
+		ins.(*Node).StartCall()
+	default:
+		return
+	}
+}
+
+func (app *App) preCall(ntype, ins interface{}) {
+	switch ntype {
+	case cf.K_AB_NODE:
+		ins.(*Node).PreCall()
+	default:
+		return
+	}
+}
+
 func (app *App) runNode() {
 	cf.LogSetPrefix("<" + cf.EnvNodeUuid() + "> ")
 
@@ -143,11 +161,13 @@ func (app *App) runNode() {
 	working := true
 	msg_index := 1
 	empty_ret := cf.FuncEmptyRet(fc)
+	app.startCall(ntype, ins)
 	if len(chs_i) < 1 {
 		// data source
 		for {
 			args := []interface{}{ins}
 			args = append(args, ex_args...)
+			app.preCall(ntype, ins)
 			rets := cf.FuncCall(fc, args)
 			if app.IsExit(ntype, ins) {
 				for i := 0; i < 2*subs_count; i++ {
@@ -200,6 +220,7 @@ func (app *App) runNode() {
 			}
 			args = append(args, args_get...)
 			args = append(args, ex_args...)
+			app.preCall(ntype, ins)
 			rets := cf.FuncCall(fc, args)
 			if len(rets) > 0 {
 				msgops.Put(chs_o, cf.MakeMsg(0, rets, cf.K_MESSAGE_NORM))
@@ -207,7 +228,6 @@ func (app *App) runNode() {
 			}
 		}
 	}
-
 	// update task state
 	parent := statops.Get(cf.DotS(node_key, cf.K_MEMBER_PARENT)).(string)
 	listky := statops.Get(cf.DotS(parent,
@@ -474,7 +494,7 @@ func (app *App) Run() {
 	cmd.Stdout = os.Stdout
 	err := cmd.Start()
 	cf.Assert(err == nil, "launch cf fail: %s", err)
-	cf.Log(cmd.String())
+	//cf.Log(cmd.String())
 	cmd.Wait()
 	cf.Log("Exit App")
 }
