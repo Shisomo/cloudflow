@@ -23,7 +23,7 @@ func RandStr(length int) string {
 	return string(result)
 }
 
-func readwords(self *cf.Node, count int) string {
+func ReadWords(self *cf.Node, count int) string {
 	// init
 	if self.UserData == nil {
 		comm.Log("random gen data with size:", count)
@@ -50,7 +50,7 @@ func readwords(self *cf.Node, count int) string {
 	return strings.Join(words, " ")
 }
 
-func countwords(self *cf.Node, txt string) map[string]float64 {
+func CountWords(self *cf.Node, txt string) map[string]float64 {
 	ret := map[string]float64{}
 	for _, word := range strings.Split(txt, " ") {
 		count := 1.0
@@ -68,7 +68,7 @@ func countwords(self *cf.Node, txt string) map[string]float64 {
 	return ret
 }
 
-func reducewords(se *cf.Node, statistic []map[string]float64) {
+func ReduceWords(se *cf.Node, statistic []map[string]float64) {
 	if se.UserData == nil {
 		se.UserData = map[string]int{}
 	}
@@ -101,6 +101,6 @@ func main() {
 	var ses = app.CreateSession("session-1")
 	var flw = ses.CreateFlow("flow-1")
 	app.Reg(statistics, "record the process")
-	flw.Add(readwords, "read", 1_000_000_000).Map(countwords, "count", 10).Reduce(reducewords, "reduce", false)
+	flw.Add(ReadWords, "read", 1_000_000_000).Map(CountWords, "count", 10).Reduce(ReduceWords, "reduce", false)
 	app.Run()
 }
