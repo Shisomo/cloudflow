@@ -61,7 +61,9 @@ func (sch *DumySche) Run() {
 				tsk_id += 1
 			}
 			// watch key + timeout: TBD
-			time.Sleep(5 * time.Second)
+			if len(tasks) < 1 {
+				time.Sleep(5 * time.Second)
+			}
 		}
 	}()
 }

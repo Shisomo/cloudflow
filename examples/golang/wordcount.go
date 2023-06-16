@@ -12,12 +12,10 @@ func statistics(app *cf.App) map[string]int {
 }
 
 func readwords(self *cf.Node, count int) int {
-	comm.Log("readwords")
 	return 1
 }
 
 func countwords(self *cf.Node, i int) int {
-	comm.Log("countwords")
 	return i + 1
 }
 
@@ -26,7 +24,7 @@ func reducewords(se *cf.Node, st []int) {
 	for _, v := range st {
 		a += v
 	}
-	comm.Log("reduce>>>", a)
+	comm.Log("reduce>>>", a, len(st))
 }
 
 func main() {
@@ -36,6 +34,6 @@ func main() {
 	var ses = app.CreateSession("session-1")
 	var flw = ses.CreateFlow("flow-1")
 	app.Reg(statistics, "record the process")
-	flw.Add(readwords, "read", int(1e8)).Map(countwords, "count", 10).Reduce(reducewords, "reduce")
+	flw.Add(readwords, "read", int(1e8)).Map(countwords, "count", 10).Reduce(reducewords, "reduce", true)
 	app.Run()
 }

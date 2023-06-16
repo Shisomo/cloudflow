@@ -12,7 +12,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-	"time"
+	"sync"
 )
 
 type App struct {
@@ -160,7 +160,6 @@ func (app *App) runNode() {
 			cf.Assert(len(rets) > 0, "func ret empty")
 			msgops.Put(chs_o, cf.MakeMsg(msg_index, rets, cf.K_MESSAGE_NORM))
 			msg_index += 1
-			time.Sleep(time.Second)
 		}
 	} else {
 		// data process
@@ -177,7 +176,6 @@ func (app *App) runNode() {
 		}(ntype, ins)
 		data_cache := initDataCache(chs_i, syc)
 		msgops.Watch(chs_i, func(worker, subj, data string) bool {
-			args := []interface{}{ins}
 			dmsg := cf.ParsMsg(data)
 			// check Exit
 			data_cache.put(subj, dmsg["ctrl_data"].(string), int(dmsg["index"].(float64)), dmsg["app_data"])
@@ -188,37 +186,38 @@ func (app *App) runNode() {
 				}
 				working = false
 			}
-			// call func
+			return true
+		})
+		// loop callback
+		for {
+			if !working {
+				break
+			}
+			args := []interface{}{ins}
 			args_get := data_cache.get()
-			if len(args_get) < 0 {
-				return false
+			if len(args_get) < 1 {
+				continue
 			}
 			args = append(args, args_get...)
 			args = append(args, ex_args...)
 			rets := cf.FuncCall(fc, args)
-			cf.Assert(len(rets) > 0, "func ret empty")
-			msgops.Put(chs_o, cf.MakeMsg(0, rets, cf.K_MESSAGE_NORM))
-			msg_index += 1
-			return true
-		})
-	}
-	for {
-		if !working {
-			// update task state
-			parent := statops.Get(cf.DotS(node_key, cf.K_MEMBER_PARENT)).(string)
-			listky := statops.Get(cf.DotS(parent,
-				cf.If(ntype == cf.K_AB_SERVICE, cf.K_AB_SERVICE, cf.K_AB_NODE).(string))).(string)
-			tsk := task.Task{
-				List_key: listky,
-				Uuid_key: node_key,
+			if len(rets) > 0 {
+				msgops.Put(chs_o, cf.MakeMsg(0, rets, cf.K_MESSAGE_NORM))
+				msg_index += 1
 			}
-			task.UpdateStat(statops, tsk, cf.K_STAT_EXIT, node_key)
-			msgops.Put([]string{app_id + ".log"}, cf.FmStr("%s exit", node_key))
-			break
 		}
-		time.Sleep(10 * time.Second)
-		msgops.Put([]string{app_id + ".log"}, cf.FmStr("%s is alive", node_key))
 	}
+
+	// update task state
+	parent := statops.Get(cf.DotS(node_key, cf.K_MEMBER_PARENT)).(string)
+	listky := statops.Get(cf.DotS(parent,
+		cf.If(ntype == cf.K_AB_SERVICE, cf.K_AB_SERVICE, cf.K_AB_NODE).(string))).(string)
+	tsk := task.Task{
+		List_key: listky,
+		Uuid_key: node_key,
+	}
+	task.UpdateStat(statops, tsk, cf.K_STAT_EXIT, node_key)
+	msgops.Put([]string{app_id + ".log"}, cf.FmStr("%s exit", node_key))
 }
 
 func CheckNodeSrvInsCount(ops kvops.KVOp, ntype string, node_key string, subindex int, ins interface{}) {
@@ -246,6 +245,7 @@ func CheckNodeSrvInsCount(ops kvops.KVOp, ntype string, node_key string, subinde
 }
 
 type DataCache struct {
+	lock       sync.Mutex
 	sync       bool
 	exit       bool
 	dach_chans []string
@@ -256,7 +256,7 @@ type DataCache struct {
 	exit_chans []string
 }
 
-func initDataCache(chs []string, sync bool) DataCache {
+func initDataCache(chs []string, sync bool) *DataCache {
 	dc := DataCache{
 		sync:       sync,
 		exit:       false,
@@ -273,37 +273,32 @@ func initDataCache(chs []string, sync bool) DataCache {
 		if !cf.StrListHas(dc.uuid_names, uuid) {
 			dc.uuid_names = append(dc.uuid_names, uuid)
 		}
+		cf.Assert(!cf.StrListHas(dc.uuid_chans[uuid], v), "chanel repeated! :%s", chs)
 		dc.uuid_chans[uuid] = append(dc.uuid_chans[uuid], v)
 		dc.dach_cache[v] = list.New()
 	}
-	return dc
+	return &dc
 }
 
+// FIXME: Here requires Congestion Control
 func (dc *DataCache) put(ch string, cdata string, t_index int, t_data interface{}) {
+	dc.lock.Lock()
+	value := map[string]interface{}{
+		"index": t_index,
+		"data":  t_data,
+	}
+	dc.dach_cache[ch].PushBack(value)
 	if dc.dach_stats[ch] != cf.K_MESSAGE_EXIT {
 		dc.dach_stats[ch] = cdata
-		value := map[string]interface{}{
-			"index": t_index,
-			"data":  t_data,
-		}
-		dc.dach_cache[ch].PushBack(value)
 		// add to exit chanes
 		if cdata == cf.K_MESSAGE_EXIT {
 			dc.exit_chans = append(dc.exit_chans, ch)
 		}
-	} else {
-		dc.dach_cache[ch].PushBack(nil)
-	}
-	// make sure other exit chans is not empy
-	for _, ex_ch := range dc.exit_chans {
-		if ex_ch == ch {
-			continue
-		}
-		dc.dach_cache[ch].PushBack(nil)
 	}
 	if len(dc.exit_chans) == len(dc.dach_chans) {
 		dc.exit = true
 	}
+	dc.lock.Unlock()
 }
 
 func (dc *DataCache) get() []interface{} {
@@ -313,26 +308,47 @@ func (dc *DataCache) get() []interface{} {
 	for index, uuid := range dc.uuid_names {
 		ids = append(ids, []int{})
 		data := [][]interface{}{}
+		batch_size := 0
+		batch_need := len(dc.uuid_chans[uuid])
 		for _, ch := range dc.uuid_chans[uuid] {
 			// in sync mode, need all channes data
-			if dc.sync {
-				if dc.dach_cache[ch].Len() < 1 {
-					return emp
+			dc.lock.Lock()
+			elem := dc.dach_cache[ch].Front()
+			if elem == nil {
+				dc.lock.Unlock()
+				if dc.sync {
+					break
+				} else {
+					continue
 				}
 			}
-			elem := dc.dach_cache[ch].Front()
-			if elem != nil {
-				value := elem.Value.(map[string]interface{})
-				// set index
-				id := value["index"].(int)
-				ids[index] = append(ids[index], id)
-				// set data
-				data = cf.ZipAppend(data, value["data"].([]interface{}))
-				// del from cache
+
+			value := elem.Value.(map[string]interface{})
+			if dc.dach_stats[ch] != cf.K_MESSAGE_EXIT {
 				dc.dach_cache[ch].Remove(elem)
 			}
+			dc.lock.Unlock()
+
+			// set index
+			id := value["index"].(int)
+			ids[index] = append(ids[index], id)
+			// set data
+			data = cf.ZipAppend(data, value["data"].([]interface{}))
+			// del from cache
+			batch_size += 1
 		}
-		cf.Assert(len(data) > 0, "data empty")
+		if dc.sync {
+			if batch_size < batch_need {
+				//	for _, ch := range dc.uuid_chans[uuid] {
+				//		cf.Log("-->", ch, dc.dach_cache[ch].Len())
+				//}
+				//cf.Log("")
+				return emp
+			}
+		}
+		if len(data) < 1 {
+			return emp
+		}
 		ret = append(ret, cf.SzOneDim(data, len(dc.uuid_chans[uuid]) == 1)...)
 	}
 	if dc.sync {

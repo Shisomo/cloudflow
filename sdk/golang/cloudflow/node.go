@@ -101,8 +101,10 @@ func (node *Node) Map(fc interface{}, name string, count int, ex_args ...interfa
 	return new_node
 }
 
-func (node *Node) Reduce(fc interface{}, name string, ex_args ...interface{}) *Node {
-	return node.append(fc, name, ex_args)
+func (node *Node) Reduce(fc interface{}, name string, sync bool, ex_args ...interface{}) *Node {
+	v := node.append(fc, name, ex_args)
+	v.Synchz = sync
+	return v
 }
 
 func (node *Node) GetSession() *Session {

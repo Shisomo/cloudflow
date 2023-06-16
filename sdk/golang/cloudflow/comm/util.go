@@ -371,53 +371,35 @@ func FuncEmptyRet(fc interface{}) []interface{} {
 	return ret
 }
 
-// convert json type to target type
-// Need supported types:
-// Int* 8, 16, 32, 64
-// Uint* 8, 16, 32, 64
-// Float32
-// Array
-// Interface
-// Map
-// Slice
-// Struct
-func JAsType(source interface{}, tgt reflect.Type) interface{} {
-	//src_kind := reflect.ValueOf(source).Kind()
+func JAsType(data interface{}, tgt reflect.Type) interface{} {
+	ref_data := reflect.ValueOf(data)
 	kind := tgt.Kind()
-	switch kind {
-	case reflect.Int:
-		return int(source.(float64))
-	default:
-		return source
+	if Astr(tgt) == Astr(ref_data.Type()) {
+		return data
 	}
-}
-
-func copyAs(data interface{}, tgt reflect.Type) interface{} {
-	var ret interface{}
-	kind := tgt.Kind()
-	v_type := tgt.Elem()
-	ret_ref := reflect.ValueOf(ret)
 	switch kind {
 	case reflect.Slice:
-		data := data.([]interface{})
-		length := len(data)
-		ret_ref.Set(reflect.MakeSlice(v_type, length, length))
-		for i := range data {
-			ret_ref.Index(i).Set(reflect.ValueOf(copyAs(&data[i], v_type)))
+		length := ref_data.Len()
+		ret := reflect.MakeSlice(tgt, length, length)
+		for i := 0; i < length; i++ {
+			value := JAsType(ref_data.Index(i).Interface(), ret.Index(0).Type())
+			ret.Index(i).Set(reflect.ValueOf(value))
 		}
-		return ret_ref.Elem()
+		return ret.Interface()
 	case reflect.Map:
-		data := data.(map[string]interface{})
-		ret_ref.Set(reflect.MakeMap(v_type))
-		for k, v := range data {
-			ret_ref.SetMapIndex(reflect.ValueOf(k), reflect.ValueOf(copyAs(v, v_type)))
+		ret := reflect.MakeMap(tgt)
+		key_type := tgt.Key()
+		val_type := reflect.New(tgt.Elem()).Elem().Type()
+		for _, k := range ref_data.MapKeys() {
+			ret.SetMapIndex(reflect.ValueOf(JAsType(k.Interface(), key_type)),
+				reflect.ValueOf(JAsType(ref_data.MapIndex(k).Interface(), val_type)))
 		}
+		return ret.Interface()
 	case reflect.Bool:
-		return bool(ret.(bool))
-	case reflect.Int:
-		return int(ret.(float64))
+		return bool(data.(bool))
+	default:
+		return ref_data.Convert(tgt).Interface()
 	}
-	return ret
 }
 
 func FuncCall(fc interface{}, args []interface{}) []interface{} {
@@ -425,7 +407,7 @@ func FuncCall(fc interface{}, args []interface{}) []interface{} {
 	Assert(ref_fc.Kind() == reflect.Func, "need func")
 	args_types := ref_fc.Type()
 	args_count := args_types.NumIn()
-	Assert(args_count == len(args), "args count not match %d != %d", args_count, len(args))
+	Assert(args_count == len(args), "args count not match %d(need) != %d(provide)", args_count, len(args))
 	args_value := make([]reflect.Value, args_count)
 	for i := range args_value {
 		v := args[i]
@@ -433,11 +415,11 @@ func FuncCall(fc interface{}, args []interface{}) []interface{} {
 			args_value[i] = v.(reflect.Value)
 			continue
 		}
-		ned_type := args_types.In(i).Kind()
+		ned_type := args_types.In(i)
 		v = JAsType(v, ned_type)
 		val := reflect.ValueOf(v)
 		val_type := val.Kind()
-		Assert(val_type == ned_type, "type not match: %s !=> %s for: %s (%s)", val_type, ned_type, FuncName(fc), v)
+		Assert(val_type == ned_type.Kind(), "type not match: %s !=> %s for: %s (%s)", val_type, ned_type, FuncName(fc), v)
 		args_value[i] = val
 	}
 	ret := ref_fc.Call(args_value)
