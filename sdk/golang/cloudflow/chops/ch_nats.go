@@ -3,6 +3,7 @@ package chops
 import (
 	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"strings"
+	"time"
 
 	"github.com/nats-io/nats.go"
 )
@@ -14,6 +15,8 @@ type NatsChOp struct {
 	js       nats.JetStreamContext
 	st       *nats.StreamInfo
 	subs     map[string]*nats.Subscription
+	pulls    map[string]*nats.Subscription
+	csmr     map[string]*nats.ConsumerInfo
 }
 
 func NewNatsChOp(nc_url string, stream_name string) *NatsChOp {
@@ -22,7 +25,9 @@ func NewNatsChOp(nc_url string, stream_name string) *NatsChOp {
 	js, err := nc.JetStream()
 	cf.Assert(err == nil, "create jetstream error: %s", err)
 	st, err := js.AddStream(&nats.StreamConfig{
-		Name:     stream_name,
+		Name: stream_name,
+		//Retention: nats.WorkQueuePolicy,
+		//Retention: nats.InterestPolicy,
 		Subjects: []string{stream_name + ".>"},
 	})
 
@@ -34,11 +39,14 @@ func NewNatsChOp(nc_url string, stream_name string) *NatsChOp {
 		js:       js,
 		st:       st,
 		subs:     map[string]*nats.Subscription{},
+		pulls:    map[string]*nats.Subscription{},
+		csmr:     map[string]*nats.ConsumerInfo{},
 	}
 	return &ops
 }
 
 func (nt *NatsChOp) Put(ch_name []string, value string) bool {
+	cf.Assert(len(value) > 0, "message is empty(val:%s)", value)
 	chs := nt.toSubjects(ch_name)
 	for _, ch := range chs {
 		_, err := nt.js.Publish(ch, []byte(value))
@@ -47,20 +55,45 @@ func (nt *NatsChOp) Put(ch_name []string, value string) bool {
 	return true
 }
 
-func (nt *NatsChOp) Watch(ch_name []string, fc func(worker string, subj string, data string) bool) []string {
+func (nt *NatsChOp) Watch(who string, ch_name []string, fc func(worker string, subj string, data string) bool) []string {
 	cnkey := []string{}
 	for _, sb := range nt.toSubjects(ch_name) {
-		cs_key := cf.AsMd5(sb)
-		sub, err := nt.js.QueueSubscribe(sb, cs_key, func(m *nats.Msg) {
+		queue_name := cf.AsMd5(sb)
+		sb_name := strings.ReplaceAll(sb, ".", "-")
+		//nt.addConsumer(sb, queue_name, sb_name)
+		sub, err := nt.js.QueueSubscribe(sb, queue_name, func(m *nats.Msg) {
 			subject := strings.Replace(m.Subject, nt.chprefix+".", "", 1)
-			fc(cs_key, subject, string(m.Data))
-			m.Ack()
-		}, nats.AckExplicit())
+			fc(queue_name, subject, string(m.Data))
+			//m.Ack()
+		}, nats.AckExplicit(), nats.Durable(sb_name))
 		cf.Assert(err == nil, "create QueueSubscribe(subj: %s) fail: %s", sb, err)
-		nt.subs[cs_key] = sub
-		cnkey = append(cnkey, cs_key)
+		key := cf.AsMd5(cf.DotS(queue_name, cf.TimestampStr()))
+		nt.subs[key] = sub
+		cnkey = append(cnkey, key)
 	}
 	return cnkey
+}
+
+/**
+func (nt *NatsChOp) addConsumer(sb string, qname string, sb_name string) {
+	_, has := nt.csmr[qname]
+	if has {
+		return
+	}
+	c, e := nt.js.AddConsumer(nt.chprefix, &nats.ConsumerConfig{
+		Durable:        sb_name,
+		DeliverSubject: qname,
+		DeliverGroup:   qname,
+		AckPolicy:      nats.AckExplicitPolicy,
+	})
+	cf.Assert(e == nil, "add consumer fail: %s", e)
+	nt.csmr[qname] = c
+}
+**/
+
+func (nt *NatsChOp) Get(who string, ch_name []string, timeout time.Duration) []string {
+	// TBD
+	return nil
 }
 
 func (nt *NatsChOp) CStop(cnkey []string) bool {

@@ -2,11 +2,13 @@ package chops
 
 import (
 	cf "cloudflow/sdk/golang/cloudflow/comm"
+	"time"
 )
 
 type ChannelOp interface {
+	Get(who string, ch_name []string, timeout time.Duration) []string
 	Put(ch_name []string, value string) bool
-	Watch(ch_name []string, fc func(worker string, subj string, data string) bool) []string
+	Watch(who string, ch_name []string, fc func(worker string, subj string, data string) bool) []string
 	Close() bool
 	CStop(cnkey []string) bool
 }

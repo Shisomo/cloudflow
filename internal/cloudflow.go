@@ -97,7 +97,7 @@ func (self *CloudFlow) SubmitApp(app_key string, app_base64_cfg string, exec_fil
 	ch := []string{
 		app_id + ".log",
 	}
-	self.chOps.Watch(ch, func(worker string, sub string, data string) bool {
+	self.chOps.Watch(app_id, ch, func(worker string, sub string, data string) bool {
 		cf.Log(worker, data)
 		return false
 	})

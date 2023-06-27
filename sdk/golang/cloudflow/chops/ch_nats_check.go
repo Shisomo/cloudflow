@@ -19,7 +19,7 @@ func CheckNats(host string, port int) bool {
 		conurl = "nats://" + host + ":" + cf.Itos(port)
 	}
 	nats := NewNatsChOp(conurl, test_stream)
-	wkey1 := nats.Watch(test_channels, func(wkid, ch string, a string) bool {
+	wkey1 := nats.Watch("w1", test_channels, func(wkid, ch string, a string) bool {
 		test_msg_idx += 1
 		if test_msg_idx == test_msg_size*len(test_channels) {
 			test_success = true
@@ -28,7 +28,7 @@ func CheckNats(host string, port int) bool {
 		return true
 	})
 
-	wkey2 := nats.Watch(test_channels, func(wkid, ch string, a string) bool {
+	wkey2 := nats.Watch("w2", test_channels, func(wkid, ch string, a string) bool {
 		test_msg_idx += 1
 		if test_msg_idx == test_msg_size*len(test_channels) {
 			test_success = true

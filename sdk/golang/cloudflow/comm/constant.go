@@ -21,6 +21,7 @@ const K_STAT_EXIT = "EXITED"
 const K_STAT_NONE = "NONE"
 const K_STAT_STAR = "STARTING"
 
+const K_MEMBER_IS_EXIT = "isexit"
 const K_MEMBER_INSCOUNT = "inscount"
 const K_MEMBER_SUB_INDX = "subidx"
 const K_MEMBER_PARENT = "parent"

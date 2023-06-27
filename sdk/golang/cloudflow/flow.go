@@ -42,7 +42,6 @@ func (flow *Flow) Add(fc interface{}, name string, ex_args ...interface{}) *Node
 		"Func":     fc,
 		"ExArgs":   ex_args,
 		"InsCount": 1,
-		"Synchz":   false,
 	})
 	flow.AddNode(new_node)
 	return new_node

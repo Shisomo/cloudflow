@@ -35,6 +35,10 @@ func AsMd5(str string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
+func AsMd5Short(str string) string {
+	return AsMd5(str)[:6]
+}
+
 func If(a bool, b, c interface{}) interface{} {
 	if a {
 		return b
@@ -362,16 +366,43 @@ func FuncName(fc interface{}) string {
 	return runtime.FuncForPC(ref_fc.Pointer()).Name()
 }
 
+func defValue(tgt reflect.Type) interface{} {
+	kd := tgt.Kind()
+	switch kd {
+	case reflect.Map:
+		return reflect.MakeMap(tgt).Interface()
+	case reflect.Array, reflect.Slice:
+		return reflect.MakeSlice(tgt, 0, 0).Interface()
+	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return reflect.ValueOf(0).Convert(tgt).Interface()
+	case reflect.Bool:
+		return false
+	case reflect.String:
+		return string("")
+	case reflect.Ptr:
+		return nil
+	default:
+	}
+	Assert(false, "dfault type of type: %s not supported", kd)
+	return nil
+}
+
 func FuncEmptyRet(fc interface{}) []interface{} {
-	ret_num := reflect.ValueOf(fc).Type().NumOut()
+	ret_type := reflect.ValueOf(fc).Type()
+	ret_num := ret_type.NumOut()
 	ret := make([]interface{}, ret_num)
 	for i := range ret {
-		ret[i] = nil
+		ret[i] = defValue(ret_type.Out(i))
 	}
+	Assert(ret != nil, "func:%s => %d return is nil", FuncName(fc), ret_type.NumOut())
 	return ret
 }
 
 func JAsType(data interface{}, tgt reflect.Type) interface{} {
+	if data == nil {
+		return nil
+	}
 	ref_data := reflect.ValueOf(data)
 	kind := tgt.Kind()
 	if Astr(tgt) == Astr(ref_data.Type()) {
@@ -383,7 +414,9 @@ func JAsType(data interface{}, tgt reflect.Type) interface{} {
 		ret := reflect.MakeSlice(tgt, length, length)
 		for i := 0; i < length; i++ {
 			value := JAsType(ref_data.Index(i).Interface(), ret.Index(0).Type())
-			ret.Index(i).Set(reflect.ValueOf(value))
+			if value != nil {
+				ret.Index(i).Set(reflect.ValueOf(value))
+			}
 		}
 		return ret.Interface()
 	case reflect.Map:
@@ -412,7 +445,8 @@ func FuncCall(fc interface{}, args []interface{}) []interface{} {
 	for i := range args_value {
 		v := args[i]
 		if v == nil {
-			args_value[i] = v.(reflect.Value)
+			Assert(false, ">>>>> set nil for arg of %s -> %s", args_types.In(i), FuncName(fc))
+			args_value[i] = reflect.ValueOf(v)
 			continue
 		}
 		ned_type := args_types.In(i)
@@ -448,8 +482,19 @@ func MakeMsg(index int, data []interface{}, cdata string) string {
 	return Base64En(AsJson(cl_data))
 }
 
+func KVMakeMsg(data map[string][]interface{}) map[string]string {
+	ret := map[string]string{}
+	for k, v := range data {
+		Assert(v != nil, "node.ret cannot be nil")
+		ret[k] = MakeMsg(-1, v, "defaultv")
+	}
+	return ret
+}
+
 func ParsMsg(data string) map[string]interface{} {
-	return MapFrJson(Base64De(data))
+	ret := MapFrJson(Base64De(data))
+	ret["index"] = int(ret["index"].(float64))
+	return ret
 }
 
 func ZipAppend(data [][]interface{}, value []interface{}) [][]interface{} {

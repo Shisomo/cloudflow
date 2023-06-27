@@ -1,7 +1,9 @@
 package cloudflow
 
 import (
+	"cloudflow/sdk/golang/cloudflow/chops"
 	cf "cloudflow/sdk/golang/cloudflow/comm"
+	"cloudflow/sdk/golang/cloudflow/kvops"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -10,17 +12,19 @@ import (
 )
 
 type Service struct {
-	IsExit   bool          `json:"-"`
-	Name     string        `json:"name"`
-	App      *App          `json:"-"`
-	Func     interface{}   `json:"-"`
-	Uuid     string        `json:"uuid"`
-	Idx      int           `json:"index"`
-	SubIdx   int           `json:"subidx"`
-	ExArgs   []interface{} `json:"-"`
-	InsCount int           `json:"inscount"`
-	UserData interface{}   `json:"-"`
-	CTime    int64         `json:"ctime"`
+	IsExit   bool            `json:"-"`
+	Name     string          `json:"name"`
+	App      *App            `json:"-"`
+	Func     interface{}     `json:"-"`
+	Uuid     string          `json:"uuid"`
+	Idx      int             `json:"index"`
+	SubIdx   int             `json:"subidx"`
+	ExArgs   []interface{}   `json:"-"`
+	InsCount int             `json:"inscount"`
+	UserData interface{}     `json:"-"`
+	CTime    int64           `json:"ctime"`
+	kvOps    kvops.KVOp      `json:"-"`
+	chOps    chops.ChannelOp `json:"-"`
 	cf.CommStat
 }
 
@@ -51,10 +55,12 @@ func NewService(app *App, fc interface{}, name string, ex_args ...interface{}) *
 		InsCount: 1,
 		CTime:    cf.Timestamp(),
 		UserData: nil,
+		kvOps:    nil,
 	}
 	srv.Parent = "cfapp." + app.Uuid
 	srv.Cstat = cf.K_STAT_WAIT
 	srv.AppUid = app.Uuid
+	srv.IsExit = false
 	app.Svrs = append(app.Svrs, &srv)
 	srv.UpdateUuid()
 	__srv_index__ += 1
@@ -69,7 +75,89 @@ func (srv *Service) UpdateUuid() {
 	srv.Uuid = cf.AsMd5(srv.App.Uuid + ".services." + cf.Itos(srv.Idx) + "." + cf.Itos(srv.SubIdx))
 }
 
-func (svr *Service) call(arg ...interface{}) interface{} {
+// RunInterface
+func (srv *Service) Exited() bool {
+	return srv.IsExit
+}
+
+func (srv *Service) StartCall() {
 	// TBD
+}
+
+func (srv *Service) PreCall() {
+	// TBD
+}
+
+func (srv *Service) Call(a []interface{}) []interface{} {
+	args := []interface{}{srv}
+	args = append(args, a...)
+	args = append(args, srv.ExArgs...)
+	srv.PreCall()
+	return cf.FuncCall(srv.Func, args)
+}
+
+func (srv *Service) SyncState() {
+	// TBD
+}
+
+func (srv *Service) NeedExit() bool {
+	return false
+}
+
+func (srv *Service) Exit(reason string) {
+	srv.IsExit = true
+	srv.ExitLog = reason
+}
+
+func (srv *Service) InOutChs() ([]string, []string) {
+	return []string{cf.DotS(srv.Uuid, "int")}, []string{cf.DotS(srv.Uuid, "out")}
+}
+
+func (srv *Service) SetSubIdx(idx int) {
+	srv.SubIdx = idx
+}
+
+func (srv *Service) SetKVOps(ops kvops.KVOp) {
+	srv.kvOps = ops
+}
+
+func (srv *Service) FuncName() string {
+	return cf.FuncName(srv.Func)
+}
+
+func (srv *Service) InstanceCount() int {
+	return srv.InsCount
+}
+
+func (srv *Service) GetBatchSize() int {
 	return 1
+}
+
+func (srv *Service) GetExitChs() (map[string][]interface{}, bool) {
+	return map[string][]interface{}{}, false
+}
+
+func (srv *Service) UpdateUUID(node_key string) {
+	srv.Uuid = strings.Replace(node_key, cf.K_AB_SERVICE+".", "", 1)
+}
+
+func (srv *Service) SetMsgOps(ops chops.ChannelOp) {
+	srv.chOps = ops
+}
+
+func (srv *Service) msg(txt string) {
+	cf.Log(txt)
+	srv.chOps.Put([]string{srv.AppUid + ".log"}, txt)
+}
+
+func (srv *Service) MsgLog(a ...interface{}) {
+	srv.msg(fmt.Sprint(a...))
+}
+
+func (srv *Service) MsgLogf(fmt string, a ...interface{}) {
+	srv.msg(cf.FmStr(fmt, a...))
+}
+
+func (srv *Service) UUID() string {
+	return srv.Uuid
 }

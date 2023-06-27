@@ -54,3 +54,7 @@ func Stat(ops kvops.KVOp, tsk Task) string {
 func AddTo(ops kvops.KVOp, tsk Task, worker string) {
 	ops.Set(cf.DotS(worker, cf.K_AB_TASK, tsk.Uuid_key), tsk)
 }
+
+func NodesState(ops kvops.KVOp, node_key_uuid string, target_stat string) {
+	ops.Get(node_key_uuid + "*")
+}
