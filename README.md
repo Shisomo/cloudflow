@@ -40,11 +40,13 @@ CloudFlow 利用"编程"的方式尝试解决如下问题：
 
 各组件层级关系如下：
 
+```
 APP
-&nbsp; +Session
-&nbsp; &nbsp; +Flow
-&nbsp; &nbsp;&nbsp; +Node
-&nbsp; +Service
+  +Session
+   +Flow
+    +Node
+  +Service
+```
 
 其中 Node 和 Service 是基础调度单元，可以进行相互访问。
 
@@ -92,7 +94,25 @@ func main() {
 
 先定义数据产生，处理函数，如果通过CloudFlow接口构建Flow，然后执行。执行过程中CloudFlow会根据参数选择是单节点，多节点还是基于K8s环境执行。对于用户而言，感觉是在本地执行。
 
-#### （五）使用文档
+输出：
+```
+...
+<node.6eceff87e06b40f130de264cb3c229b7-5> 2023/06/28 22:44:30.722110 node.go:264: node.6eceff87e06b40f130de264cb3c229b7-5 (main.CountWords) exit (recv: 234, send: 234) cost 12s
+cloudflow:2023/06/28 22:44:30.723466 cloudflow.go:101: 8288ac38bd78f0c8c2b9c0511611eeed node.6eceff87e06b40f130de264cb3c229b7-5 (main.CountWords) exit (recv: 234, send: 234) cost 12s
+<node.6eceff87e06b40f130de264cb3c229b7-7> 2023/06/28 22:44:30.752858 node.go:264: node.6eceff87e06b40f130de264cb3c229b7-7 (main.CountWords) exit (recv: 124, send: 124) cost 10s
+cloudflow:2023/06/28 22:44:30.755942 cloudflow.go:101: 8288ac38bd78f0c8c2b9c0511611eeed node.6eceff87e06b40f130de264cb3c229b7-7 (main.CountWords) exit (recv: 124, send: 124) cost 10s
+<node.c0ccc187dc3c050a9be9fca94d85bd51> 2023/06/28 22:44:32.615482 node.go:264: all words: 100000, redu speed:18, calls: 195
+cloudflow:2023/06/28 22:44:32.616530 cloudflow.go:101: 8288ac38bd78f0c8c2b9c0511611eeed all words: 100000, redu speed:18, calls: 195
+<node.c0ccc187dc3c050a9be9fca94d85bd51> 2023/06/28 22:44:32.671459 node.go:264: node.c0ccc187dc3c050a9be9fca94d85bd51 (main.ReduceWords) exit (recv: 194, send: 0) cost 10s
+cloudflow:2023/06/28 22:44:32.672532 cloudflow.go:101: 8288ac38bd78f0c8c2b9c0511611eeed node.c0ccc187dc3c050a9be9fca94d85bd51 (main.ReduceWords) exit (recv: 194, send: 0) cost 10s
+```
+
+#### （五）快速开始
+
+1. 安装 TBD
+2. 验证 TBD
+
+#### （六）开发文档
 
 1. [全局数据格式定义](doc/01-runstate.md)
 2. [消息中间件](doc/02-message.md)

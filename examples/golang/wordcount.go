@@ -106,6 +106,6 @@ func main() {
 	var ses = app.CreateSession("session-1")
 	var flw = ses.CreateFlow("flow-1")
 	app.Reg(statistics, "record the process")
-	flw.Add(ReadWords, "read", 1000_0000).Map(CountWords, "count", 10).Reduce(ReduceWords, "reduce", 10)
+	flw.Add(ReadWords, "read", 10_0000, cf.OpInsCount(2)).Map(CountWords, "count", 10).Reduce(ReduceWords, "reduce", 10)
 	app.Run()
 }

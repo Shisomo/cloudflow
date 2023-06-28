@@ -93,7 +93,8 @@ func (node *Node) Update(kw ...map[string]interface{}) {
 	node.Uuid = cf.AsMd5(identies)
 }
 
-func (node *Node) append(fc interface{}, name string, ex_args []interface{}) *Node {
+func (node *Node) append(fc interface{}, name string, args ...interface{}) *Node {
+	ex_args, options := ParsOptions(args...)
 	var new_node = NewNode(node.Flow, map[string]interface{}{
 		"Name":     name,
 		"Func":     fc,
@@ -102,23 +103,23 @@ func (node *Node) append(fc interface{}, name string, ex_args []interface{}) *No
 	})
 	new_node.PreNodes = append(new_node.PreNodes, node)
 	node.NexNodes = append(node.NexNodes, new_node)
-	new_node.Update()
+	new_node.Update(options)
 	node.Flow.AddNode(new_node)
 	return new_node
 }
 
-func (node *Node) Add(fc interface{}, name string, ex_args ...interface{}) *Node {
-	return node.append(fc, name, ex_args)
+func (node *Node) Add(fc interface{}, name string, args ...interface{}) *Node {
+	return node.append(fc, name, args...)
 }
 
-func (node *Node) Map(fc interface{}, name string, count int, ex_args ...interface{}) *Node {
-	var new_node = node.append(fc, name, ex_args)
+func (node *Node) Map(fc interface{}, name string, count int, args ...interface{}) *Node {
+	var new_node = node.append(fc, name, args...)
 	new_node.InsCount = count
 	return new_node
 }
 
-func (node *Node) Reduce(fc interface{}, name string, batch int, ex_args ...interface{}) *Node {
-	v := node.append(fc, name, ex_args)
+func (node *Node) Reduce(fc interface{}, name string, batch int, args ...interface{}) *Node {
+	v := node.append(fc, name, args...)
 	v.Batch = batch
 	return v
 }

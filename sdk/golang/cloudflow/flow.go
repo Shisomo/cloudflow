@@ -36,13 +36,15 @@ func (f *Flow) String() string {
 	return fmt.Sprintf("Fow(%s, %s)", f.Uuid, f.Name)
 }
 
-func (flow *Flow) Add(fc interface{}, name string, ex_args ...interface{}) *Node {
+func (flow *Flow) Add(fc interface{}, name string, args ...interface{}) *Node {
+	ex_args, options := ParsOptions(args...)
 	var new_node = NewNode(flow, map[string]interface{}{
 		"Name":     name,
 		"Func":     fc,
 		"ExArgs":   ex_args,
 		"InsCount": 1,
 	})
+	new_node.Update(options)
 	flow.AddNode(new_node)
 	return new_node
 }
