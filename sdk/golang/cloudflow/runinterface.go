@@ -3,6 +3,7 @@ package cloudflow
 import (
 	"cloudflow/sdk/golang/cloudflow/chops"
 	"cloudflow/sdk/golang/cloudflow/kvops"
+	"cloudflow/sdk/golang/cloudflow/task"
 )
 
 type RunInterface interface {
@@ -24,4 +25,7 @@ type RunInterface interface {
 	GetExitChs() (map[string][]interface{}, bool)
 	UpdateUUID(node_key string)
 	UUID() string
+	IgnoreRet() bool
+	CallCount() int64
+	AsTask() task.Task
 }

@@ -1,11 +1,11 @@
 package worker
 
 import (
-	"cloudflow/internal/task"
 	"cloudflow/sdk/golang/cloudflow/cfmodule"
 	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"cloudflow/sdk/golang/cloudflow/fileops"
 	"cloudflow/sdk/golang/cloudflow/kvops"
+	"cloudflow/sdk/golang/cloudflow/task"
 	"os"
 	"os/exec"
 	"path"

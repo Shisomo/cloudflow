@@ -4,6 +4,7 @@ import (
 	"cloudflow/sdk/golang/cloudflow/chops"
 	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"cloudflow/sdk/golang/cloudflow/kvops"
+	"cloudflow/sdk/golang/cloudflow/task"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -67,7 +68,7 @@ func NewNode(flow *Flow, kw ...map[string]interface{}) *Node {
 	}
 	__node_index__ += 1
 	node.Update(kw...)
-	node.Parent = "flow." + flow.Uuid
+	node.Parent = cf.DotS(cf.K_AB_FLOW, flow.Uuid)
 	node.AppUid = flow.Sess.App.Uuid
 	node.Cstat = cf.K_STAT_WAIT
 	node.IsExit = false
@@ -170,7 +171,11 @@ func (node *Node) Call(a []interface{}) []interface{} {
 	args = append(args, a...)
 	args = append(args, node.ExArgs...)
 	node.PreCall()
-	return cf.FuncCall(node.Func, args)
+	ret := cf.FuncCall(node.Func, args)
+	if node.Exited() {
+		node.callCount -= 1
+	}
+	return ret
 }
 
 func (node *Node) SyncState() {
@@ -269,4 +274,18 @@ func (node *Node) MsgLogf(fmt string, a ...interface{}) {
 
 func (node *Node) UUID() string {
 	return node.Uuid
+}
+
+func (node *Node) IgnoreRet() bool {
+	if len(node.NexNodes) > 0 {
+		return false
+	}
+	return true
+}
+
+func (node *Node) AsTask() task.Task {
+	return task.Task{
+		List_key: cf.DotS(node.Parent, cf.K_AB_NODE),
+		Uuid_key: cf.DotS(cf.K_AB_NODE, node.Uuid),
+	}
 }

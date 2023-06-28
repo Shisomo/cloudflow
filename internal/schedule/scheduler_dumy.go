@@ -1,10 +1,10 @@
 package schedule
 
 import (
-	"cloudflow/internal/task"
 	"cloudflow/sdk/golang/cloudflow/cfmodule"
 	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"cloudflow/sdk/golang/cloudflow/kvops"
+	"cloudflow/sdk/golang/cloudflow/task"
 	"runtime"
 	"time"
 )

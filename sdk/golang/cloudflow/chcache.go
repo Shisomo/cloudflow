@@ -22,7 +22,7 @@ func InitChDataCache(chs []string, batch int) *DataCache {
 	}
 	cf.Assert(batch >= 1, "need batch size > 0")
 	for _, k := range chs {
-		c := make(chan string, 10000)
+		c := make(chan string, 10000*batch)
 		dc.dach_cache[k] = &c
 	}
 	return &dc

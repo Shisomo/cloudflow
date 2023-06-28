@@ -1,9 +1,9 @@
 package worker
 
 import (
-	"cloudflow/internal/task"
 	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"cloudflow/sdk/golang/cloudflow/kvops"
+	"cloudflow/sdk/golang/cloudflow/task"
 )
 
 func ListTasks(ops kvops.KVOp, worker_uuid string) []task.Task {

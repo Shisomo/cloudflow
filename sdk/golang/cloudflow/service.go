@@ -4,6 +4,7 @@ import (
 	"cloudflow/sdk/golang/cloudflow/chops"
 	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"cloudflow/sdk/golang/cloudflow/kvops"
+	"cloudflow/sdk/golang/cloudflow/task"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -12,19 +13,20 @@ import (
 )
 
 type Service struct {
-	IsExit   bool            `json:"-"`
-	Name     string          `json:"name"`
-	App      *App            `json:"-"`
-	Func     interface{}     `json:"-"`
-	Uuid     string          `json:"uuid"`
-	Idx      int             `json:"index"`
-	SubIdx   int             `json:"subidx"`
-	ExArgs   []interface{}   `json:"-"`
-	InsCount int             `json:"inscount"`
-	UserData interface{}     `json:"-"`
-	CTime    int64           `json:"ctime"`
-	kvOps    kvops.KVOp      `json:"-"`
-	chOps    chops.ChannelOp `json:"-"`
+	IsExit    bool            `json:"-"`
+	Name      string          `json:"name"`
+	App       *App            `json:"-"`
+	Func      interface{}     `json:"-"`
+	Uuid      string          `json:"uuid"`
+	Idx       int             `json:"index"`
+	SubIdx    int             `json:"subidx"`
+	ExArgs    []interface{}   `json:"-"`
+	InsCount  int             `json:"inscount"`
+	UserData  interface{}     `json:"-"`
+	CTime     int64           `json:"ctime"`
+	kvOps     kvops.KVOp      `json:"-"`
+	chOps     chops.ChannelOp `json:"-"`
+	callCount int64           `json:"-"`
 	cf.CommStat
 }
 
@@ -57,7 +59,7 @@ func NewService(app *App, fc interface{}, name string, ex_args ...interface{}) *
 		UserData: nil,
 		kvOps:    nil,
 	}
-	srv.Parent = "cfapp." + app.Uuid
+	srv.Parent = cf.DotS(cf.K_AB_CFAPP, app.Uuid)
 	srv.Cstat = cf.K_STAT_WAIT
 	srv.AppUid = app.Uuid
 	srv.IsExit = false
@@ -81,11 +83,11 @@ func (srv *Service) Exited() bool {
 }
 
 func (srv *Service) StartCall() {
-	// TBD
+	srv.callCount = 0
 }
 
 func (srv *Service) PreCall() {
-	// TBD
+	srv.callCount += 1
 }
 
 func (srv *Service) Call(a []interface{}) []interface{} {
@@ -93,7 +95,11 @@ func (srv *Service) Call(a []interface{}) []interface{} {
 	args = append(args, a...)
 	args = append(args, srv.ExArgs...)
 	srv.PreCall()
-	return cf.FuncCall(srv.Func, args)
+	ret := cf.FuncCall(srv.Func, args)
+	if srv.Exited() {
+		srv.callCount -= 1
+	}
+	return ret
 }
 
 func (srv *Service) SyncState() {
@@ -160,4 +166,19 @@ func (srv *Service) MsgLogf(fmt string, a ...interface{}) {
 
 func (srv *Service) UUID() string {
 	return srv.Uuid
+}
+
+func (srv *Service) IgnoreRet() bool {
+	return false
+}
+
+func (srv *Service) CallCount() int64 {
+	return srv.callCount
+}
+
+func (srv *Service) AsTask() task.Task {
+	return task.Task{
+		List_key: cf.DotS(srv.Parent, cf.K_AB_NODE),
+		Uuid_key: cf.DotS(cf.K_AB_NODE, srv.Uuid),
+	}
 }

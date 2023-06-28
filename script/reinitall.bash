@@ -9,6 +9,7 @@ ps afx|grep tmp/node.|awk '{print $1}'|xargs kill
 ps afx|grep tmp/srvs.|awk '{print $1}'|xargs kill
 rm /tmp/node.* -rf
 rm /tmp/srvs.* -rf
+rm /tmp/go-build3* -rf
 
 # clear all ObjectStorage
 bucket=`nats object ls|awk '{print $2}'|grep -v "^$"|grep -v "Object"|grep -v "Bucket"|xargs`

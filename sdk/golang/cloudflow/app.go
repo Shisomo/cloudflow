@@ -5,6 +5,7 @@ import (
 	"cloudflow/sdk/golang/cloudflow/chops"
 	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"cloudflow/sdk/golang/cloudflow/kvops"
+	"cloudflow/sdk/golang/cloudflow/task"
 	"encoding/json"
 	"os"
 	"os/exec"
@@ -67,6 +68,7 @@ func (app *App) getNode(key string) (string, int, RunInterface) {
 }
 
 func (app *App) runNode() {
+	time_start := cf.Timestamp()
 	cf.LogSetPrefix("<" + cf.EnvNodeUuid() + "> ")
 	cf.Log("run node with args:", cf.EnvAPPHost(), cf.EnvAPPPort(), cf.EnvAPPUuid(), cf.EnvNodeUuid())
 	app_id := cf.EnvAPPUuid()
@@ -94,7 +96,7 @@ func (app *App) runNode() {
 	chs_i, chs_o := ins.InOutChs()
 	cf.Log("start worker(", node_key, ") with:", chs_i, "=>", chs_o, ins.FuncName())
 
-	msg_index := 1
+	msg_index := 0
 	ins.StartCall()
 	time_ch_exit := cf.Timestamp()
 
@@ -112,15 +114,16 @@ func (app *App) runNode() {
 		}
 	} else {
 		// data process
+		exit_loop := false
 		cf.Log("watch:", chs_i)
 		data_cache := InitChDataCache(chs_i, ins.GetBatchSize())
 		cnkeys := []string{}
 		cnkeys = append(cnkeys, msgops.Watch(ins.UUID(), chs_i, func(worker, subj, data string) bool {
+			cf.Assert(!exit_loop, "get data from empty node: %s", data)
 			data_cache.Put(subj, data)
 			return true
 		})...)
 		// loop check and callback
-		exit_loop := false
 		for {
 			args_get, all_dfv := data_cache.Get()
 			if len(args_get) < 1 || all_dfv {
@@ -144,7 +147,8 @@ func (app *App) runNode() {
 			if exit_loop {
 				break
 			}
-			if len(rets) > 0 {
+			if !ins.IgnoreRet() {
+				cf.Assert(len(rets) > 0, "need ret data > 0, ret: %s", rets)
 				msgops.Put(chs_o, cf.MakeMsg(msg_index, rets, cf.K_MESSAGE_NORM))
 				msg_index += 1
 			}
@@ -152,7 +156,10 @@ func (app *App) runNode() {
 	}
 	// update task state
 	ins.SyncState()
-	ins.MsgLog(cf.FmStr("%s (%s) exit", node_key, ins.FuncName()))
+	task.UpdateStat(statops, ins.AsTask(), cf.K_STAT_EXIT, ins.UUID())
+	time_end := cf.Timestamp()
+	ins.MsgLogf("%s (%s) exit (recv: %d, send: %d) cost %ds", node_key, ins.FuncName(), ins.CallCount(),
+		msg_index, (time_end-time_start)/int64(time.Second))
 }
 
 func CheckNodeSrvInsCount(ops kvops.KVOp, ntype string, node_key string, subindex int, ins RunInterface) {
