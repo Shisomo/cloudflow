@@ -1,14 +1,16 @@
 package service
 
 import (
+	"cloudflow/sdk/golang/cloudflow/chops"
 	cf "cloudflow/sdk/golang/cloudflow/comm"
 )
 
-type MessageOps interface {
+type MessageService interface {
 	ServiceOps
+	GetChannelOps() chops.ChannelOp
 }
 
-func GetMessageImp(cfg map[string]interface{}) MessageOps {
+func GetMessageImp(cfg map[string]interface{}) MessageService {
 	imp := cfg["imp"].(string)
 	cf.Log("create Message service with imp:", imp)
 	switch imp {

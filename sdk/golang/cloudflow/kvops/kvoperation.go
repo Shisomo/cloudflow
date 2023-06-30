@@ -18,7 +18,8 @@ type KVOp interface {
 	Scope() string
 }
 
-func GetKVOpImp(imp string, cfg map[string]interface{}) KVOp {
+func GetKVOpImp(cfg map[string]interface{}) KVOp {
+	imp := cfg["imp"].(string)
 	switch imp {
 	case "etcd":
 		host := cfg["host"].(string)

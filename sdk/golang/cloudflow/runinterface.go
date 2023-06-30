@@ -7,6 +7,7 @@ import (
 )
 
 type RunInterface interface {
+	GetName() string
 	Exited() bool
 	StartCall()
 	PreCall()
@@ -25,7 +26,9 @@ type RunInterface interface {
 	GetExitChs() (map[string][]interface{}, bool)
 	UpdateUUID(node_key string)
 	UUID() string
-	IgnoreRet() bool
+	IgnoreRet()
+	IsIgnoreRet() bool
 	CallCount() int64
 	AsTask() task.Task
+	PerfLogInter() int
 }

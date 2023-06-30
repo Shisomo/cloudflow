@@ -1,30 +1,40 @@
 package cloudflow
 
 type OPS map[string]interface{}
+type OptionFunc func() OPS
 
 type CloudFlowOption interface {
 	Get() OPS
 }
 
-type OptionInsCount struct {
-	InsCount int
+type CFOption struct {
+	option_fc OptionFunc
 }
 
-type OptionBatch struct {
-	Batch int
+func (self *CFOption) Get() OPS {
+	return self.option_fc()
 }
 
-func (self *OptionInsCount) Get() OPS {
-	ops := OPS{
-		"InsCount": self.InsCount,
+func NewCFOption(fc OptionFunc) *CFOption {
+	return &CFOption{
+		option_fc: fc,
 	}
-	return ops
 }
 
 func OpInsCount(count int) CloudFlowOption {
-	return &OptionInsCount{
-		InsCount: count,
-	}
+	return NewCFOption(func() OPS {
+		return OPS{
+			"InsCount": count,
+		}
+	})
+}
+
+func OpPerfLogInter(interval int) CloudFlowOption {
+	return NewCFOption(func() OPS {
+		return OPS{
+			"InsCount": interval,
+		}
+	})
 }
 
 func ParsOptions(ops ...interface{}) ([]interface{}, map[string]interface{}) {

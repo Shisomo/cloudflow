@@ -51,10 +51,10 @@ func GetAppCfg() cf.CFG {
 	cfg := LoadCfg(Cf_file)
 	// overwrite
 	if Cf_host != "" {
-		cf.SetCfg(&cfg, "cf.services.state.host", Cf_host)
+		cf.SetCfg(&cfg, cf.DotS(cf.CFG_KEY_SRV_STATE, "host"), Cf_host)
 	}
 	if Cf_port != 0 {
-		cf.SetCfg(&cfg, "cf.services.state.port", Cf_port)
+		cf.SetCfg(&cfg, cf.DotS(cf.CFG_KEY_SRV_STATE, "port"), Cf_port)
 	}
 	return cfg
 }

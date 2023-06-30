@@ -8,47 +8,75 @@ import (
 	"cloudflow/sdk/golang/cloudflow/chops"
 	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"cloudflow/sdk/golang/cloudflow/fileops"
+	"cloudflow/sdk/golang/cloudflow/kvops"
 	"strings"
 	"time"
 )
 
 type CloudFlow struct {
-	cfg      *cf.CFG
-	StateSrv sr.StateOps
-	chOps    chops.ChannelOp
-	flOps    fileops.FileOps
+	cfg *cf.CFG
+	// services
+	StateSrv  sr.StateService
+	MessagSrv sr.MessageService
+	// operations
+	MsgOps  chops.ChannelOp
+	StatOps kvops.KVOp
+	FileOps fileops.FileOps
 }
 
 func NewCloudFlow(cfg *cf.CFG) *CloudFlow {
 	return &CloudFlow{
-		cfg: cfg,
+		cfg:      cfg,
+		StateSrv: nil,
+		MsgOps:   nil,
+		StatOps:  nil,
+		FileOps:  nil,
 	}
 }
 
-func NewChanlOps(cfg cf.CFG, stream string) chops.ChannelOp {
-	imp := cfg["imp"].(string)
-	host := cfg["host"].(string)
-	port := cfg["port"].(int)
-	switch imp {
-	case "nats":
-		return chops.NewNatsChOp("nats://"+host+":"+cf.Itos(port), stream)
-	default:
-		cf.Assert(false, "%s not support", imp)
+func (self *CloudFlow) ConnectMsg(scope ...string) {
+	if self.MsgOps == nil {
+		cfg := cf.GetCfgC(self.cfg, cf.CFG_KEY_SRV_MESSAGE)
+		if len(scope) > 0 {
+			cfg["app_id"] = scope[0]
+		}
+		self.MsgOps = chops.GetChOpsImp(cfg)
 	}
-	return nil
+}
+
+func (self *CloudFlow) ConnectStat() {
+	if self.StatOps == nil {
+		self.StatOps = kvops.GetKVOpImp(cf.GetCfgC(self.cfg, cf.CFG_KEY_SRV_STATE))
+	}
+}
+
+func (self *CloudFlow) Connect() {
+	self.ConnectStat()
+	self.ConnectMsg()
+}
+
+func (self *CloudFlow) ConnectFile(app_key string) {
+	if self.FileOps == nil {
+		self.FileOps = fileops.GetFileOps(app_key, cf.GetCfgC(self.cfg, cf.CFG_KEY_SRV_FSTORE))
+	}
 }
 
 func (self *CloudFlow) StartService() {
 	cfg := self.cfg
-	cf.Log("start cf.state")
-	srv_state := sr.GetStateImp(cf.GetCfgC(cfg, "cf.services.state"))
-	cf.Assert(srv_state.Restart(), "start cf.services fail")
-	self.StateSrv = srv_state.(sr.StateOps)
-
-	cf.Log("start cf.message")
-	srv_message := sr.GetMessageImp(cf.GetCfgC(cfg, "cf.services.message"))
-	cf.Assert(srv_message.Restart(), "start cf.message fail")
-
+	cf.Log("start service state")
+	if self.StateSrv == nil {
+		srv_state := sr.GetStateImp(cf.GetCfgC(cfg, cf.CFG_KEY_SRV_STATE))
+		cf.Assert(srv_state.Restart(), "start stat service fail")
+		self.StateSrv = srv_state.(sr.StateService)
+		self.StatOps = self.StateSrv.GetKVOps()
+	}
+	if self.MessagSrv == nil {
+		cf.Log("start service message")
+		srv_message := sr.GetMessageImp(cf.GetCfgC(cfg, cf.CFG_KEY_SRV_MESSAGE))
+		cf.Assert(srv_message.Restart(), "start message service fail")
+		self.MessagSrv = srv_message.(sr.MessageService)
+		self.MsgOps = self.MessagSrv.GetChannelOps()
+	}
 	// start kv service
 	cf.Log("Fake start kv service, FIXME")
 	// TBD
@@ -60,50 +88,52 @@ func (self *CloudFlow) StartService() {
 
 func (self *CloudFlow) StartSchAndWorker() {
 	// check scheduler, if no one, start dumy scheduler
-	schedule.TryStartSchduler(cf.GetCfgC(self.cfg, "cf.scheduler"), self.StateSrv)
+	schedule.TryStartSchduler(cf.GetCfgC(self.cfg, cf.CFG_KEY_SRV_SCEDULER),
+		self.StatOps)
 	// check worker, if no one, start dumy worker
-	worker.TryStartWorker(cf.GetCfgC(self.cfg, "cf.worker"), cf.GetCfgC(self.cfg, "cf.services.fstore"), self.StateSrv)
+	worker.TryStartWorker(cf.GetCfgC(self.cfg, cf.CFG_KEY_SRV_WORKER),
+		cf.GetCfgC(self.cfg, cf.CFG_KEY_SRV_FSTORE), self.StatOps)
 }
 
 func (self *CloudFlow) SubmitApp(app_key string, app_base64_cfg string, exec_file string, app_args string, node_uuid string) {
 	cf.Log("submit app:", app_key, "exec:", exec_file, "node:", node_uuid)
-	cf.Log("find apps:", cfmodule.ListKeys(self.StateSrv, cf.K_CF_APPLIST, ""))
+	cf.Log("find apps:", cfmodule.ListKeys(self.StatOps, cf.K_CF_APPLIST, ""))
 	app_id := strings.Split(app_key, ".")[1]
-	if !cf.StrListHas(cfmodule.ListKeys(self.StateSrv, cf.K_CF_APPLIST, ""), app_id) {
+	if !cf.StrListHas(cfmodule.ListKeys(self.StatOps, cf.K_CF_APPLIST, ""), app_id) {
 		cf.Log("load app:", app_id)
-		self.StateSrv.Set(cf.DotS(cf.K_CF_APPLIST, app_key), cf.K_STAT_WAIT)
+		self.StatOps.Set(cf.DotS(cf.K_CF_APPLIST, app_key), cf.K_STAT_WAIT)
 
 		exec_file_key := cf.DotS(app_key, cf.K_MEMBER_EXEC)
 		exec_app_args := cf.DotS(app_key, cf.K_MEMBER_APPARGS)
 
-		self.StateSrv.Set(exec_file_key, exec_file)
-		self.StateSrv.Set(exec_app_args, app_args)
-		self.StateSrv.Set(cf.DotS(app_key, cf.K_MEMBER_RUNCFG), cf.Base64En(cf.AsJson(self.cfg)))
+		self.StatOps.Set(exec_file_key, exec_file)
+		self.StatOps.Set(exec_app_args, app_args)
+		self.StatOps.Set(cf.DotS(app_key, cf.K_MEMBER_RUNCFG), cf.Base64En(cf.AsJson(self.cfg)))
 
 		app_data := cf.Json2Map(cf.Base64De(app_base64_cfg))
-		self.StateSrv.SetKV(app_data, false)
+		self.StatOps.SetKV(app_data, false)
 
 		// upload exec file
 		cf.Log("start file storage service")
-		self.flOps = fileops.GetFileOps(app_key, cf.GetCfgC(self.cfg, "cf.services.fstore"))
-		self.flOps.Put(exec_file_key, exec_file)
-		self.flOps.Close()
+		self.FileOps = fileops.GetFileOps(app_key, cf.GetCfgC(self.cfg, cf.CFG_KEY_SRV_FSTORE))
+		self.FileOps.Put(exec_file_key, exec_file)
+		self.FileOps.Close()
 	} else {
 		cf.Log("app:", app_id, "already exist")
 	}
 
 	// watch app logs
-	self.chOps = NewChanlOps(cf.GetCfgC(self.cfg, "cf.services.message"), app_id)
 	ch := []string{
 		app_id + ".log",
 	}
-	self.chOps.Watch(app_id, ch, func(worker string, sub string, data string) bool {
+	self.ConnectMsg(app_id)
+	self.MsgOps.Watch(app_id, ch, func(worker string, sub string, data string) bool {
 		cf.Log(worker, data)
 		return false
 	})
 	cf.Log("waiting logs from:", ch)
 	for {
-		if self.StateSrv.Get(cfmodule.GetStat(self.StateSrv, app_key)) == cf.K_STAT_EXIT {
+		if self.StatOps.Get(cfmodule.GetStat(self.StatOps, app_key)) == cf.K_STAT_EXIT {
 			cf.Log("run app:", app_id, " complete")
 			break
 		}
@@ -111,4 +141,11 @@ func (self *CloudFlow) SubmitApp(app_key string, app_base64_cfg string, exec_fil
 	}
 }
 
-var version = "0.1"
+// Base operations: list, stop, restart, delete, ...
+
+func (self *CloudFlow) ListApp() []string {
+	ret := []string{}
+	return ret
+}
+
+var Version = cf.Version()

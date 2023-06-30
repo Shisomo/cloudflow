@@ -18,9 +18,9 @@ var CMD_schedule = &cobra.Command{
 		cfg := GetAppCfg()
 		cf.SetCfg(&cfg, "cf.services.state.scope", app_scope)
 		cf.SetCfg(&cfg, "cf.app_nid", app_nodeid)
-		flow := it.NewCloudFlow(&cfg)
-		flow.StartService()
-		schedule.StartScheduler(cf.GetCfgC(&cfg, "cf.scheduler"), flow.StateSrv)
+		ins := it.NewCloudFlow(&cfg)
+		ins.Connect()
+		schedule.StartScheduler(cf.GetCfgC(&cfg, "cf.scheduler"), ins.StateSrv.GetKVOps())
 		for {
 			time.Sleep(time.Second)
 		}

@@ -18,13 +18,13 @@ func Test_ch_correct(t *testing.T) {
 	for i := 0; i < map_ins; i++ {
 		map_chs = append(map_chs, comm.Itos(i))
 	}
-	imp := "nats"
 	cfg := comm.CFG{
 		"app_id": "app_id",
 		"host":   "127.0.0.1",
 		"port":   4222,
+		"imp":    "nats",
 	}
-	message := chops.GetChOpsImp(imp, cfg)
+	message := chops.GetChOpsImp(cfg)
 	output_ch := []string{"out"}
 	sum := 0.0
 	target := 0

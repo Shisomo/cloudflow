@@ -17,9 +17,9 @@ var CMD_Worker = &cobra.Command{
 		cfg := GetAppCfg()
 		cf.SetCfg(&cfg, "cf.services.state.scope", app_scope)
 		cf.SetCfg(&cfg, "cf.app_nid", app_nodeid)
-		flow := it.NewCloudFlow(&cfg)
-		flow.StartService()
-		worker.StartWorker(cf.GetCfgC(&cfg, "cf.worker"), cf.GetCfgC(&cfg, "cf.services.fstore"), flow.StateSrv)
+		ins := it.NewCloudFlow(&cfg)
+		ins.Connect()
+		worker.StartWorker(cf.GetCfgC(&cfg, "cf.worker"), cf.GetCfgC(&cfg, "cf.services.fstore"), ins.StatOps)
 		for {
 			time.Sleep(time.Second)
 		}

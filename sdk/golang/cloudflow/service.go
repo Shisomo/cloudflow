@@ -45,7 +45,8 @@ func (srv *Service) MarshalJSON() ([]byte, error) {
 
 var __srv_index__ int = 0
 
-func NewService(app *App, fc interface{}, name string, ex_args ...interface{}) *Service {
+func NewService(app *App, fc interface{}, name string, args ...interface{}) *Service {
+	ex_args, options := ParsOptions(args...)
 	var srv = Service{
 		IsExit:   false,
 		Name:     name,
@@ -59,6 +60,7 @@ func NewService(app *App, fc interface{}, name string, ex_args ...interface{}) *
 		UserData: nil,
 		kvOps:    nil,
 	}
+	cf.UpdateObject(&srv, options)
 	srv.Parent = cf.DotS(cf.K_AB_CFAPP, app.Uuid)
 	srv.Cstat = cf.K_STAT_WAIT
 	srv.AppUid = app.Uuid
@@ -168,8 +170,11 @@ func (srv *Service) UUID() string {
 	return srv.Uuid
 }
 
-func (srv *Service) IgnoreRet() bool {
+func (srv *Service) IsIgnoreRet() bool {
 	return false
+}
+
+func (srv *Service) IgnoreRet() {
 }
 
 func (srv *Service) CallCount() int64 {
@@ -181,4 +186,12 @@ func (srv *Service) AsTask() task.Task {
 		List_key: cf.DotS(srv.Parent, cf.K_AB_NODE),
 		Uuid_key: cf.DotS(cf.K_AB_NODE, srv.Uuid),
 	}
+}
+
+func (srv *Service) PerfLogInter() int {
+	return 0
+}
+
+func (srv *Service) GetName() string {
+	return srv.Name
 }

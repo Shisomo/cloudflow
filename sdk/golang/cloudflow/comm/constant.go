@@ -32,3 +32,9 @@ const K_MEMBER_RUNCFG = "runcfg"
 
 const K_MESSAGE_EXIT = "EXIT"
 const K_MESSAGE_NORM = "NORM"
+
+const CFG_KEY_SRV_MESSAGE = "cf.services.message"
+const CFG_KEY_SRV_STATE = "cf.services.state"
+const CFG_KEY_SRV_FSTORE = "cf.services.fstore"
+const CFG_KEY_SRV_SCEDULER = "cf.scheduler"
+const CFG_KEY_SRV_WORKER = "cf.worker"

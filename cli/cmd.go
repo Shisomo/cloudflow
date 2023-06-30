@@ -24,7 +24,7 @@ var CfCmd = &cobra.Command{
 }
 
 func Main() {
-	CfCmd.AddCommand(CMD_Build, CMD_Config)
+	CfCmd.AddCommand(CMD_Build, CMD_Config, CMD_UI)
 	CfCmd.AddCommand(CMD_Run, CMD_Stat, CMD_Worker, CMD_schedule)
 	CfCmd.Execute()
 }

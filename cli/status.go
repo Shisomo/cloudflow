@@ -2,11 +2,10 @@ package cli
 
 import (
 	cf "cloudflow/sdk/golang/cloudflow/comm"
+	"cloudflow/sdk/golang/cloudflow/kvops"
 	"fmt"
 	"sort"
 	"strings"
-
-	sr "cloudflow/internal/service"
 
 	"github.com/spf13/cobra"
 )
@@ -20,15 +19,14 @@ var CMD_Stat = &cobra.Command{
 		cfg := GetAppCfg()
 		cf.SetCfg(&cfg, "cf.services.state.scope", app_scope)
 		cf.SetCfg(&cfg, "cf.app_nid", app_nodeid)
-		ops := sr.GetStateImp(cf.GetCfgC(&cfg, "cf.services.state"))
-		cf.Assert(ops.Restart(), "start stat ops fail!")
+		ops := kvops.GetKVOpImp(cf.GetCfgC(&cfg, "cf.services.state"))
 		max_keys := 0
 		kvs := []string{}
 		key := "*"
 		if len(args) > 0 {
 			key = args[0] + "*"
 		}
-		all_data := ops.(sr.StateOps).Get(key)
+		all_data := ops.Get(key)
 		if all_data == nil {
 			return
 		}

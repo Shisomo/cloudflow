@@ -72,8 +72,8 @@ func (se *StateEtcd) Start() bool {
 	cf.Log("creat client with endpoints:", se.EtcdUrls)
 	se.EtcdOps = kv.NewEtcDOps(se.EtcdUrls, se.AppScope)
 	check_key := "atime" + cf.AsMd5(cf.AppID()) + cf.TimestampStr()
-	se.Set(check_key, check_key)
-	rkey := se.Get(check_key)
+	se.EtcdOps.Set(check_key, check_key)
+	rkey := se.EtcdOps.Get(check_key)
 	if rkey == nil {
 		cf.Log("verify etcd fail:", check_key, "!=", rkey)
 		return false
@@ -82,7 +82,7 @@ func (se *StateEtcd) Start() bool {
 		cf.Log("verify etcd fail:", check_key, "!=", rkey)
 		return false
 	}
-	se.Del(check_key)
+	se.EtcdOps.Del(check_key)
 	cf.Log("check etcd success")
 	return true
 }
@@ -109,38 +109,6 @@ func (se *StateEtcd) Started() bool {
 	return se.cmd != nil
 }
 
-func (se *StateEtcd) Get(key string) interface{} {
-	return se.EtcdOps.Get(key)
-}
-
-func (se *StateEtcd) Del(key string) bool {
-	return se.EtcdOps.Del(key)
-}
-
-func (se *StateEtcd) Set(key string, val interface{}) bool {
-	return se.EtcdOps.Set(key, val)
-}
-
-func (se *StateEtcd) SetKV(Kv map[string]interface{}, ignore_empty bool) bool {
-	return se.EtcdOps.SetKV(Kv, ignore_empty)
-}
-
-func (se *StateEtcd) GetKs(Kv []string, ignore_empty bool) map[string]interface{} {
-	return se.EtcdOps.GetKs(Kv, ignore_empty)
-}
-
-func (se *StateEtcd) Host() string {
-	return se.EtcdOps.Host()
-}
-
-func (se *StateEtcd) Port() int {
-	return se.EtcdOps.Port()
-}
-
-func (se *StateEtcd) Imp() string {
-	return se.EtcdOps.Imp()
-}
-
-func (se *StateEtcd) Scope() string {
-	return se.EtcdOps.Scope()
+func (se *StateEtcd) GetKVOps() kv.KVOp {
+	return se.EtcdOps
 }

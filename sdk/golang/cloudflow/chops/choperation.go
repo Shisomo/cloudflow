@@ -11,9 +11,11 @@ type ChannelOp interface {
 	Watch(who string, ch_name []string, fc func(worker string, subj string, data string) bool) []string
 	Close() bool
 	CStop(cnkey []string) bool
+	CEmpty(cnkey []string) bool
 }
 
-func GetChOpsImp(imp string, cfg cf.CFG) ChannelOp {
+func GetChOpsImp(cfg cf.CFG) ChannelOp {
+	imp := cfg["imp"].(string)
 	switch imp {
 	case "nats":
 		host := cfg["host"].(string)

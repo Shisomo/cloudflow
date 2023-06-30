@@ -2,30 +2,36 @@ package service
 
 import (
 	"bytes"
+	"cloudflow/sdk/golang/cloudflow/chops"
 	ch "cloudflow/sdk/golang/cloudflow/chops"
 	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"os/exec"
 )
 
 type MessageNats struct {
-	host    string
-	port    int
-	isLocal bool
-	cmd     *exec.Cmd
-	stderr  bytes.Buffer
-	stdout  bytes.Buffer
+	scope      interface{}
+	host       string
+	port       int
+	isLocal    bool
+	cmd        *exec.Cmd
+	stderr     bytes.Buffer
+	stdout     bytes.Buffer
+	ChannelOps ch.ChannelOp
 }
 
 func NewMessageNats(cfg map[string]interface{}) *MessageNats {
 	cf.Log("creat nats message")
 	host := cfg["host"].(string)
 	port := cfg["port"].(int)
+	scop := cfg["app_id"]
 	local := host == "localhost" || host == "127.0.0.1"
 	mnats := MessageNats{
-		host:    host,
-		port:    port,
-		isLocal: local,
-		cmd:     nil,
+		host:       host,
+		port:       port,
+		isLocal:    local,
+		cmd:        nil,
+		ChannelOps: nil,
+		scope:      scop,
 	}
 	return &mnats
 }
@@ -48,6 +54,9 @@ func (msg *MessageNats) Start() bool {
 	// check nats-server useable
 	cf.Assert(ch.CheckNats(msg.host, msg.port) == true, "test nats fail")
 	cf.Log("check nat-server with jetstream success")
+	if msg.scope != nil {
+		msg.ChannelOps = chops.NewNatsChOp(cf.MakeNatsUrl(msg.host, msg.port), msg.scope.(string))
+	}
 	return true
 }
 
@@ -68,4 +77,8 @@ func (msg *MessageNats) Kill() bool {
 	}
 	msg.cmd = nil
 	return true
+}
+
+func (msg *MessageNats) GetChannelOps() chops.ChannelOp {
+	return msg.ChannelOps
 }

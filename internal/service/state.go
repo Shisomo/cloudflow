@@ -5,12 +5,12 @@ import (
 	kv "cloudflow/sdk/golang/cloudflow/kvops"
 )
 
-type StateOps interface {
+type StateService interface {
 	ServiceOps
-	kv.KVOp
+	GetKVOps() kv.KVOp
 }
 
-func GetStateImp(cfg map[string]interface{}) ServiceOps {
+func GetStateImp(cfg map[string]interface{}) StateService {
 	imp := cfg["imp"].(string)
 	cf.Log("create state service with imp:", imp)
 	switch imp {

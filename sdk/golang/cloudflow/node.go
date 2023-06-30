@@ -31,9 +31,11 @@ type Node struct {
 	callCount int64           `json:"-"`
 	recTime   int64           `json:"-"`
 	recCount  int64           `json:"-"`
+	PerfInter int             `json:"-"`
 	kvOps     kvops.KVOp      `json:"-"`
 	chOps     chops.ChannelOp `json:"-"`
 	defaultv  []interface{}   `json:"-"`
+	ignoreRet bool            `json:"-"`
 	cf.CommStat
 }
 
@@ -58,13 +60,14 @@ var __node_index__ int = 0
 
 func NewNode(flow *Flow, kw ...map[string]interface{}) *Node {
 	var node = Node{
-		Idx:      __node_index__,
-		Flow:     flow,
-		CTime:    cf.Timestamp(),
-		UserData: nil,
-		kvOps:    nil,
-		chOps:    nil,
-		Batch:    1,
+		Idx:       __node_index__,
+		Flow:      flow,
+		CTime:     cf.Timestamp(),
+		UserData:  nil,
+		kvOps:     nil,
+		chOps:     nil,
+		Batch:     1,
+		PerfInter: 0,
 	}
 	__node_index__ += 1
 	node.Update(kw...)
@@ -78,17 +81,7 @@ func NewNode(flow *Flow, kw ...map[string]interface{}) *Node {
 }
 
 func (node *Node) Update(kw ...map[string]interface{}) {
-	var node_rf = reflect.ValueOf(node)
-	for _, arg := range kw {
-		for key, value := range arg {
-			v := node_rf.Elem().FieldByName(key)
-			if v.CanSet() {
-				v.Set(reflect.ValueOf(value))
-			} else {
-				cf.Assert(false, "Set Node fail: k=%s v=%s, %s", key, value, kw)
-			}
-		}
-	}
+	cf.UpdateObject(node, kw...)
 	identies := cf.DotS(node.Flow.Uuid, cf.Itos(node.Idx), node.Name, cf.Itos(node.SubIdx))
 	node.Uuid = cf.AsMd5(identies)
 }
@@ -165,6 +158,7 @@ func (node *Node) StartCall() {
 
 func (node *Node) PreCall() {
 	node.callCount += 1
+	node.ignoreRet = false
 }
 
 func (node *Node) Call(a []interface{}) []interface{} {
@@ -277,11 +271,18 @@ func (node *Node) UUID() string {
 	return node.Uuid
 }
 
-func (node *Node) IgnoreRet() bool {
+func (node *Node) IsIgnoreRet() bool {
+	if node.ignoreRet {
+		return true
+	}
 	if len(node.NexNodes) > 0 {
 		return false
 	}
 	return true
+}
+
+func (node *Node) IgnoreRet() {
+	node.ignoreRet = true
 }
 
 func (node *Node) AsTask() task.Task {
@@ -289,4 +290,12 @@ func (node *Node) AsTask() task.Task {
 		List_key: cf.DotS(node.Parent, cf.K_AB_NODE),
 		Uuid_key: cf.DotS(cf.K_AB_NODE, node.Uuid),
 	}
+}
+
+func (node *Node) PerfLogInter() int {
+	return node.PerfInter
+}
+
+func (node *Node) GetName() string {
+	return node.Name
 }

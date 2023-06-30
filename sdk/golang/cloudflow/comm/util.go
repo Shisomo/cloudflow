@@ -537,4 +537,25 @@ func RandStr(length int) string {
 	return string(result)
 }
 
+func UpdateObject(objct interface{}, kw ...map[string]interface{}) {
+	var node_rf = reflect.ValueOf(objct)
+	for _, arg := range kw {
+		for key, value := range arg {
+			v := node_rf.Elem().FieldByName(key)
+			if v.CanSet() {
+				v.Set(reflect.ValueOf(value))
+			} else {
+				Assert(false, "Set %s fail: k=%s v=%s, %s", node_rf.Type(), key, value, kw)
+			}
+		}
+	}
+}
+
+func Max(a, b int64) int64 {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 type CFG map[string]interface{}

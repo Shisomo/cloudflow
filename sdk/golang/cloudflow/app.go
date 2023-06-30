@@ -76,10 +76,11 @@ func (app *App) runNode() {
 
 	ntype, subindex, ins := app.getNode(node_key)
 	cf.Assert(ins != nil, "Node(%s) not find", node_key)
-	statops := kvops.GetKVOpImp(cf.EnvAPPIMP(), map[string]interface{}{
+	statops := kvops.GetKVOpImp(map[string]interface{}{
 		"host":  cf.EnvAPPHost(),
 		"port":  cf.EnvAPPPort(),
 		"scope": cf.EnvAPPScope(),
+		"imp":   cf.EnvAPPIMP(),
 	})
 	ins.SetKVOps(statops)
 	ins.UpdateUUID(node_key)
@@ -89,7 +90,7 @@ func (app *App) runNode() {
 
 	ch_cfg := cf.GetCfgC(&runcfg, "cf.services.message")
 	ch_cfg["app_id"] = app_id
-	msgops := chops.GetChOpsImp(ch_cfg["imp"].(string), ch_cfg)
+	msgops := chops.GetChOpsImp(ch_cfg)
 	CheckNodeSrvInsCount(statops, ntype, node_key, subindex, ins)
 	ins.SetMsgOps(msgops)
 
@@ -105,18 +106,21 @@ func (app *App) runNode() {
 		for {
 			args := []interface{}{}
 			rets := ins.Call(args)
+			cf.Assert(len(rets) > 0, "func ret empty")
+			if !ins.IsIgnoreRet() {
+				msgops.Put(chs_o, cf.MakeMsg(msg_index, rets, cf.K_MESSAGE_NORM))
+			}
 			if ins.Exited() {
 				break
 			}
-			cf.Assert(len(rets) > 0, "func ret empty")
-			msgops.Put(chs_o, cf.MakeMsg(msg_index, rets, cf.K_MESSAGE_NORM))
 			msg_index += 1
 		}
 	} else {
 		// data process
+		perf_log_inter := ins.PerfLogInter()
 		exit_loop := false
 		cf.Log("watch:", chs_i)
-		data_cache := InitChDataCache(chs_i, ins.GetBatchSize())
+		data_cache := InitChDataCache(chs_i, ins.GetBatchSize(), perf_log_inter > 0)
 		cnkeys := []string{}
 		cnkeys = append(cnkeys, msgops.Watch(ins.UUID(), chs_i, func(worker, subj, data string) bool {
 			cf.Assert(!exit_loop, "get data from empty node: %s", data)
@@ -124,33 +128,44 @@ func (app *App) runNode() {
 			return true
 		})...)
 		// loop check and callback
+		loop_count := 0
 		for {
+			loop_count += 1
 			args_get, all_dfv := data_cache.Get()
 			if len(args_get) < 1 || all_dfv {
 				if cf.Timestamp()-time_ch_exit > int64(time.Second) {
 					// check exit
 					ch_val, all_exit := ins.GetExitChs()
 					if all_exit && all_dfv {
-						msgops.CStop(cnkeys)
-						ins.Exit("no input")
-						exit_loop = true
+						if msgops.CEmpty(cnkeys) {
+							msgops.CStop(cnkeys)
+							ins.Exit("no input")
+							exit_loop = true
+						}
 					}
 					data_cache.SetExitValue(cf.KVMakeMsg(ch_val))
 					time_ch_exit = cf.Timestamp()
 				}
+				time.Sleep(100 * time.Millisecond)
 				if !exit_loop {
 					continue
 				}
 			}
 			time_ch_exit = cf.Timestamp()
 			rets := ins.Call(args_get)
-			if exit_loop {
-				break
-			}
-			if !ins.IgnoreRet() {
+			data_cache.UpdateExSpeed("call", time_ch_exit)
+			if !ins.IsIgnoreRet() {
 				cf.Assert(len(rets) > 0, "need ret data > 0, ret: %s", rets)
 				msgops.Put(chs_o, cf.MakeMsg(msg_index, rets, cf.K_MESSAGE_NORM))
 				msg_index += 1
+			}
+			// log performance statistics
+			if perf_log_inter > 0 && loop_count%perf_log_inter == 0 {
+				cf.Log(data_cache.Stat())
+				data_cache.ClearStat()
+			}
+			if exit_loop {
+				break
 			}
 		}
 	}
@@ -158,7 +173,7 @@ func (app *App) runNode() {
 	ins.SyncState()
 	task.UpdateStat(statops, ins.AsTask(), cf.K_STAT_EXIT, ins.UUID())
 	time_end := cf.Timestamp()
-	ins.MsgLogf("%s (%s) exit (recv: %d, send: %d) cost %ds", node_key, ins.FuncName(), ins.CallCount(),
+	ins.MsgLogf("%s-%s exit (recv: %d, send: %d) cost %ds", ins.GetName(), ins.FuncName(), ins.CallCount(),
 		msg_index, (time_end-time_start)/int64(time.Second))
 }
 
@@ -218,7 +233,7 @@ func (app *App) ExportConfigJson() (string, string) {
 	json.Unmarshal([]byte(cfgjson), &appdata)
 
 	var exportJS = make(map[string]interface{})
-	prefix := "cfapp." + app.Uuid
+	prefix := cf.DotS(cf.K_AB_CFAPP, app.Uuid)
 	exportJS[prefix+".rawcfg"] = cf.Base64En(cfgjson)
 	exportJS[prefix+".sdkv"] = cf.Version()
 	cf.DumpKV(&appdata, &exportJS, prefix, "uuid", "cstat")

@@ -74,6 +74,17 @@ func (nt *NatsChOp) Watch(who string, ch_name []string, fc func(worker string, s
 	return cnkey
 }
 
+func (nt *NatsChOp) CEmpty(cnkey []string) bool {
+	for _, k := range cnkey {
+		p, _, e := nt.subs[k].Pending()
+		cf.Assert(e == nil, "%s", e)
+		if p > 0 {
+			return false
+		}
+	}
+	return true
+}
+
 /**
 func (nt *NatsChOp) addConsumer(sb string, qname string, sb_name string) {
 	_, has := nt.csmr[qname]
