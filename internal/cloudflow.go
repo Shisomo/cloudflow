@@ -141,11 +141,4 @@ func (self *CloudFlow) SubmitApp(app_key string, app_base64_cfg string, exec_fil
 	}
 }
 
-// Base operations: list, stop, restart, delete, ...
-
-func (self *CloudFlow) ListApp() []string {
-	ret := []string{}
-	return ret
-}
-
 var Version = cf.Version()

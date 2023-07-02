@@ -58,3 +58,37 @@ func AddTo(ops kvops.KVOp, tsk Task, worker string) {
 func NodesState(ops kvops.KVOp, node_key_uuid string, target_stat string) {
 	ops.Get(node_key_uuid + "*")
 }
+
+func ListTasks(ops kvops.KVOp, worker_uuid string) []Task {
+	ret := []Task{}
+	prefix := cf.DotS(cf.K_AB_WORKER, worker_uuid, "task.")
+	tasks := ops.Get(prefix + "*")
+	if tasks == nil {
+		return ret
+	}
+	for _, t := range tasks.(map[string]interface{}) {
+		t := t.(map[string]interface{})
+		ret = append(ret, Task{
+			Uuid_key: t["ukey"].(string),
+			List_key: t["lkey"].(string),
+		})
+	}
+	return ret
+}
+
+func FilterTaskByStat(ops kvops.KVOp, tasks []Task, stat string) []Task {
+	ret := []Task{}
+	for _, tsk := range tasks {
+		if Stat(ops, tsk) != stat {
+			continue
+		}
+		ret = append(ret, tsk)
+	}
+	return ret
+}
+
+func ClearALLTasks(ops kvops.KVOp, worker string) {
+	for _, k := range ListTasks(ops, worker) {
+		ops.Del(cf.DotS(cf.K_AB_WORKER, worker, "task", k.Uuid_key))
+	}
+}

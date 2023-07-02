@@ -57,6 +57,14 @@ func TimestampStr() string {
 	return strconv.FormatInt(Timestamp(), 10)
 }
 
+func TimeFmt(stamp float64, fmt ...string) string {
+	t := time.Unix(int64(stamp)/int64(time.Second), int64(stamp)%int64(time.Second))
+	if len(fmt) < 1 {
+		return t.Format("2023/7/2-20:54:7")
+	}
+	return t.Format(fmt[0])
+}
+
 func Itos(a int) string {
 	return strconv.Itoa(a)
 }
