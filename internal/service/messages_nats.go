@@ -6,6 +6,7 @@ import (
 	ch "cloudflow/sdk/golang/cloudflow/chops"
 	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"os/exec"
+	"time"
 )
 
 type MessageNats struct {
@@ -14,8 +15,8 @@ type MessageNats struct {
 	port       int
 	isLocal    bool
 	cmd        *exec.Cmd
-	stderr     bytes.Buffer
-	stdout     bytes.Buffer
+	stderr     *bytes.Buffer
+	stdout     *bytes.Buffer
 	ChannelOps ch.ChannelOp
 }
 
@@ -32,6 +33,8 @@ func NewMessageNats(cfg map[string]interface{}) *MessageNats {
 		cmd:        nil,
 		ChannelOps: nil,
 		scope:      scop,
+		stderr:     new(bytes.Buffer),
+		stdout:     new(bytes.Buffer),
 	}
 	return &mnats
 }
@@ -41,11 +44,17 @@ func (msg *MessageNats) Start() bool {
 		pid := cf.ProcessPID("nats-server")
 		if pid < 0 {
 			msg.cmd = exec.Command("nats-server", "--js", "-a", msg.host, "-p", cf.Itos(msg.port))
-			msg.cmd.Stderr = &msg.stderr
-			msg.cmd.Stdout = &msg.stdout
+			msg.cmd.Stderr = msg.stderr
+			msg.cmd.Stdout = msg.stdout
 			cf.Log("run:", msg.cmd.String())
 			err := msg.cmd.Start()
-			cf.Assert(err == nil, "start nats-server error: %s \nstderr:\n%s\nstdout:\n%s", err, msg.stderr.String(), msg.stdout.String())
+			time.Sleep(time.Second)
+			cf.Assert(err == nil,
+				"start nats-server error: %s \nstderr:\n%s\nstdout:\n%s",
+				err, msg.stderr.String(), msg.stdout.String())
+			cf.Assert(msg.cmd.ProcessState == nil,
+				"start nats-server fail: \nstderr:\n%s\nstdout:\n%s",
+				msg.stderr.String(), msg.stdout.String())
 			cf.Log("start nats-server with Pid:", msg.cmd.Process.Pid)
 		} else {
 			cf.Log("nats-server is already on: ", pid)

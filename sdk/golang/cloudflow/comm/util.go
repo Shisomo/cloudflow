@@ -21,6 +21,9 @@ import (
 	"github.com/denisbrodbeck/machineid"
 )
 
+type CFG map[string]interface{}
+type DYMAP map[interface{}]interface{}
+
 func Version() string {
 	return "0.01"
 }
@@ -558,4 +561,12 @@ func Max(a, b int64) int64 {
 	return b
 }
 
-type CFG map[string]interface{}
+func MKeys(data interface{}) []string {
+	data_ref := reflect.ValueOf(data)
+	Assert(data_ref.Type().Kind() == reflect.Map, "need map")
+	ret := []string{}
+	for _, k := range data_ref.MapKeys() {
+		ret = append(ret, Astr(k))
+	}
+	return ret
+}
