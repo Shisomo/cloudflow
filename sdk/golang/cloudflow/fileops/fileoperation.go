@@ -8,6 +8,8 @@ import (
 type FileOps interface {
 	Put(file_name string, file_path string) bool
 	Get(file_name string, file_path string) bool
+	Del(file_name string) bool
+	Exists(file_name string) bool
 	Close()
 	Conn() bool
 	Clear() bool

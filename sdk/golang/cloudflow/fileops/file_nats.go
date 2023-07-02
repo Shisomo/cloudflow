@@ -27,6 +27,29 @@ func (self *FileOpsNats) Conn() bool {
 	return true
 }
 
+func (self *FileOpsNats) Exists(key string) bool {
+	_, err := self.getKV().Get(key)
+	if err != nil {
+		cf.Log("check fail, error:", err)
+		return false
+	}
+	return true
+}
+
+func (self *FileOpsNats) Del(key string) bool {
+	f, e := self.getKV().Get(key)
+	if e != nil {
+		cf.Log("get key fail: ", key)
+		return false
+	}
+	err := self.getObject().Delete(string(f.Value()))
+	if err != nil {
+		cf.Log("Delete file fail: ", err)
+		return false
+	}
+	return true
+}
+
 func (self *FileOpsNats) Put(key string, file_path string) bool {
 	cf.Log("upload file:", file_path)
 	info, err := self.getObject().PutFile(file_path)
