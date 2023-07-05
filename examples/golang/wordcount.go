@@ -47,7 +47,7 @@ func readWords(self *cf.Node, count int) string {
 	self.UserData = remain_count
 
 	if remain_count%10_0000 == 1 {
-		comm.Log("remain words:", remain_count, "read speed:", int(self.CallSpeed(true)))
+		comm.Info("remain words:", remain_count, "read speed:", int(self.CallSpeed(true)))
 	}
 	comm.Assert(len(words) > 0, "find empty txt")
 	return strings.Join(words, " ")
@@ -110,7 +110,7 @@ func reduceWords(se *cf.Node, statistic []map[string]float64, is_final bool) map
 
 func Main_Wordcount(args ...string) {
 	comm.LogSetPrefix("test-word-count ")
-	comm.Log("Version", comm.Version())
+	comm.Info("Version", comm.Version())
 	var app = cf.NewApp("test-app")
 	var ses = app.CreateSession("session-1")
 	var flw = ses.CreateFlow("flow-1")
@@ -129,10 +129,10 @@ func Main_Wordcount(args ...string) {
 			app.Run()
 			return
 		} else {
-			comm.Log("option ", args[1], " not supported")
+			comm.Info("option ", args[1], " not supported")
 		}
 	}
-	comm.Log("use simple flow")
+	comm.Info("use simple flow")
 	// DAG:
 	//                / count1
 	//      read ---->  ...     ---> reduce

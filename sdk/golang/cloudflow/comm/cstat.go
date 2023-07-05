@@ -15,6 +15,7 @@ type CommStat struct {
 	Atags   string `json:"atags"`  // 动态标签
 	Count   int64  `json:"count"`  // 活动次数
 	DSize   int64  `json:"dsize"`  // 数据量(字节)
+	CTime   int64  `json:"ctime"`  // 创建时间
 	Atime   int64  `json:"atime"`  // 最后修改时间
 	WhoAc   string `json:"whoac"`  // 修改者
 	OpLog   string `json:"oplog"`  // 操作日志

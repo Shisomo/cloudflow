@@ -55,7 +55,7 @@ func (nt *NatsChOp) Put(ch_name []string, value string) bool {
 	return true
 }
 
-func (nt *NatsChOp) Watch(who string, ch_name []string, fc func(worker string, subj string, data string) bool) []string {
+func (nt *NatsChOp) Watch(who string, ch_name []string, fc func(queue_nm string, subj string, data string) bool) []string {
 	cnkey := []string{}
 	for _, sb := range nt.toSubjects(ch_name) {
 		queue_name := cf.AsMd5(sb)
@@ -67,7 +67,24 @@ func (nt *NatsChOp) Watch(who string, ch_name []string, fc func(worker string, s
 			//m.Ack()
 		}, nats.AckExplicit(), nats.Durable(sb_name))
 		cf.Assert(err == nil, "create QueueSubscribe(subj: %s) fail: %s", sb, err)
-		key := cf.AsMd5(cf.DotS(queue_name, cf.TimestampStr()))
+		key := "que" + cf.AsMd5(cf.DotS(queue_name, cf.TimestampStr()))
+		nt.subs[key] = sub
+		cnkey = append(cnkey, key)
+	}
+	return cnkey
+}
+
+func (nt *NatsChOp) Sub(who string, ch_name []string, fc func(sb_name string, subj string, data string) bool) []string {
+	cnkey := []string{}
+	for _, sb := range nt.toSubjects(ch_name) {
+		sb_name := strings.ReplaceAll(sb, ".", "-") + "-" + who
+		sub, err := nt.js.Subscribe(sb, func(m *nats.Msg) {
+			subject := strings.Replace(m.Subject, nt.chprefix+".", "", 1)
+			fc(sb_name, subject, string(m.Data))
+			//m.Ack()
+		}, nats.AckExplicit(), nats.Durable(sb_name))
+		cf.Assert(err == nil, "create QueueSubscribe(subj: %s) fail: %s", sb, err)
+		key := "sub" + cf.AsMd5(cf.DotS(sb_name, cf.TimestampStr()))
 		nt.subs[key] = sub
 		cnkey = append(cnkey, key)
 	}

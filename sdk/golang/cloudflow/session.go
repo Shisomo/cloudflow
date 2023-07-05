@@ -8,7 +8,6 @@ type Session struct {
 	App   *App    `json:"-"`
 	Flows []*Flow `json:"flow"`
 	Idx   int     `json:"index"`
-	CTime int64   `json:"ctime"`
 	cf.CommStat
 }
 
@@ -20,9 +19,9 @@ func NewSession(app *App, name string) *Session {
 		Uuid:  cf.AsMd5(app.Uuid + cf.Itos(__session_index__)),
 		App:   app,
 		Idx:   __session_index__,
-		CTime: cf.Timestamp(),
 		Flows: []*Flow{},
 	}
+	ses.CTime = cf.Timestamp()
 	ses.Parent = "cfapp." + app.Uuid
 	app.Sess = append(app.Sess, &ses)
 	__session_index__ += 1

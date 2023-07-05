@@ -14,6 +14,7 @@ var CMD_example = &cobra.Command{
 	Aliases: []string{"ex", "exa", "example"},
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		commPreProcess()
 		examples := map[string]func(a ...string){
 			"wordcount": examples.Main_Wordcount,
 			"gigasort":  examples.Main_GigaSort,

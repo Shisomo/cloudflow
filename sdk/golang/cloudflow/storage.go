@@ -30,6 +30,7 @@ type Storage struct {
 	file  fileops.FileOps
 }
 
-func NewStorage(scope string, root_cfg *cf.CFG) StorageOps {
+func NewStorage(scope string, root_cfg *cf.CFG, ops ...interface{}) StorageOps {
+	// TBD
 	return nil
 }

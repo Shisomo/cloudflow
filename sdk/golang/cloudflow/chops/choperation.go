@@ -9,6 +9,7 @@ type ChannelOp interface {
 	Get(who string, ch_name []string, timeout time.Duration) []string
 	Put(ch_name []string, value string) bool
 	Watch(who string, ch_name []string, fc func(worker string, subj string, data string) bool) []string
+	Sub(who string, ch_name []string, fc func(worker string, subj string, data string) bool) []string
 	Close() bool
 	CStop(cnkey []string) bool
 	CEmpty(cnkey []string) bool

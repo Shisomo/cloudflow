@@ -12,6 +12,7 @@ var CMD_UI = &cobra.Command{
 	Short: "a short discription of UI",
 	Long:  "UI is ...., long description",
 	Run: func(cmd *cobra.Command, args []string) {
+		commPreProcess()
 		cfg := GetAppCfg()
 		cf.SetCfg(&cfg, cf.DotS(cf.CFG_KEY_SRV_STATE, "scope"), app_scope)
 		ui.StartUI(&cfg)

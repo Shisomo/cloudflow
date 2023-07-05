@@ -9,8 +9,31 @@ import (
 
 var flags = log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile
 var logger = log.New(os.Stderr, "cloudflow:", flags)
+var enable_log = true
+
+func DisableLog() {
+	enable_log = false
+}
+
+func EnableLog() {
+	enable_log = true
+}
+
+func Info(args ...interface{}) {
+	logger.Output(2, fmt.Sprintln(args...))
+}
+
+func Debug(args ...interface{}) {
+	if !enable_log {
+		return
+	}
+	logger.Output(2, fmt.Sprintln(args...))
+}
 
 func Log(args ...interface{}) {
+	if !enable_log {
+		return
+	}
 	logger.Output(2, fmt.Sprintln(args...))
 }
 

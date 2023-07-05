@@ -12,6 +12,7 @@ var CMD_Build = &cobra.Command{
 	Long:    "build is ...., long description",
 	Aliases: []string{"b", "bd"},
 	Run: func(cmd *cobra.Command, args []string) {
+		commPreProcess()
 		cf.Log(args)
 	},
 }

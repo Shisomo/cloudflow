@@ -23,7 +23,6 @@ type Service struct {
 	ExArgs    []interface{}   `json:"-"`
 	InsCount  int             `json:"inscount"`
 	UserData  interface{}     `json:"-"`
-	CTime     int64           `json:"ctime"`
 	kvOps     kvops.KVOp      `json:"-"`
 	chOps     chops.ChannelOp `json:"-"`
 	callCount int64           `json:"-"`
@@ -56,10 +55,10 @@ func NewService(app *App, fc interface{}, name string, args ...interface{}) *Ser
 		SubIdx:   0,
 		ExArgs:   ex_args,
 		InsCount: 1,
-		CTime:    cf.Timestamp(),
 		UserData: nil,
 		kvOps:    nil,
 	}
+	srv.CTime = cf.Timestamp()
 	cf.UpdateObject(&srv, options)
 	srv.Parent = cf.DotS(cf.K_AB_CFAPP, app.Uuid)
 	srv.Cstat = cf.K_STAT_WAIT

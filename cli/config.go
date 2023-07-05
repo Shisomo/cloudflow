@@ -15,6 +15,7 @@ var CMD_Config = &cobra.Command{
 	Short: "a short discription of config",
 	Long:  "config is ...., long description",
 	Run: func(cmd *cobra.Command, args []string) {
+		commPreProcess()
 		cf.Log("run config", args)
 	},
 }

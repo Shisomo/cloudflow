@@ -15,12 +15,11 @@ import (
 )
 
 type App struct {
-	cfg   cf.CFG     `json:"-"`
-	Name  string     `json:"name"`
-	Uuid  string     `json:"uuid"`
-	Svrs  []*Service `json:"srvs"`
-	Sess  []*Session `json:"sess"`
-	CTime int64      `json:"ctime"`
+	cfg  cf.CFG     `json:"-"`
+	Name string     `json:"name"`
+	Uuid string     `json:"uuid"`
+	Svrs []*Service `json:"srvs"`
+	Sess []*Session `json:"sess"`
 	cf.CommStat
 }
 
@@ -186,14 +185,15 @@ func CheckNodeSrvInsCount(ops kvops.KVOp, ntype string, node_key string, subinde
 func NewApp(name string, cfg ...cf.CFG) *App {
 	app_uid := cf.EnvAPPUuid()
 	app_uid = cf.If(app_uid != "", app_uid, cf.AsMd5(cf.TimestampStr())).(string)
-	return &App{
-		Name:  name,
-		Uuid:  app_uid,
-		CTime: cf.Timestamp(),
-		Svrs:  []*Service{},
-		Sess:  []*Session{},
-		cfg:   cf.MergeCFG(cfg...),
+	app := App{
+		Name: name,
+		Uuid: app_uid,
+		Svrs: []*Service{},
+		Sess: []*Session{},
+		cfg:  cf.MergeCFG(cfg...),
 	}
+	app.CTime = cf.Timestamp()
+	return &app
 }
 
 func (app *App) CompareJson(jdata string) bool {

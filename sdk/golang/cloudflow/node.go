@@ -14,18 +14,24 @@ import (
 )
 
 type Node struct {
-	Name      string          `json:"name"`
-	Func      interface{}     `json:"-"`
-	Flow      *Flow           `json:"-"`
-	Uuid      string          `json:"uuid"`
-	Idx       int             `json:"index"`
-	SubIdx    int             `json:"subidx"`
-	PreNodes  []*Node         `json:"-"`
-	NexNodes  []*Node         `json:"-"`
-	ExArgs    []interface{}   `json:"-"`
-	Batch     int             `json:"batch"`
-	InsCount  int             `json:"inscount"`
-	CTime     int64           `json:"ctime"`
+	// basic-params
+	Name     string        `json:"name"`
+	Func     interface{}   `json:"-"`
+	Flow     *Flow         `json:"-"`
+	Uuid     string        `json:"uuid"`
+	Idx      int           `json:"index"`
+	SubIdx   int           `json:"subidx"`
+	PreNodes []*Node       `json:"-"`
+	NexNodes []*Node       `json:"-"`
+	ExArgs   []interface{} `json:"-"`
+	Batch    int           `json:"batch"`
+	InsCount int           `json:"inscount"`
+	InType   string        `json:"intype"` // Queue [default], Sub
+	OuType   string        `json:"outype"` // Single [default], Mut, All
+	InChan   [][]int       `json:"inchan"` // Empty [default] all pre-nodes output, pre-node's output index
+	// extra-params
+	outCount  int             `json:"-"`
+	inCount   int             `json:"-"`
 	UserData  interface{}     `json:"-"`
 	startTime int64           `json:"-"`
 	callCount int64           `json:"-"`
@@ -62,13 +68,16 @@ func NewNode(flow *Flow, kw ...map[string]interface{}) *Node {
 	var node = Node{
 		Idx:       __node_index__,
 		Flow:      flow,
-		CTime:     cf.Timestamp(),
 		UserData:  nil,
 		kvOps:     nil,
 		chOps:     nil,
 		Batch:     1,
 		PerfInter: 0,
+		InType:    cf.NODE_ITYPE_QUEUE,
+		OuType:    cf.NODE_OUYPE_ALL,
+		InChan:    [][]int{},
 	}
+	node.CTime = cf.Timestamp()
 	__node_index__ += 1
 	node.Update(kw...)
 	node.Parent = cf.DotS(cf.K_AB_FLOW, flow.Uuid)

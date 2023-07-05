@@ -27,6 +27,12 @@ func (self *FileOpsNats) Conn() bool {
 	return true
 }
 
+func (self *FileOpsNats) List() []string {
+	keys, err := self.getKV().Keys()
+	cf.Assert(err == nil, "list key fail: %s", err)
+	return keys
+}
+
 func (self *FileOpsNats) Exists(key string) bool {
 	_, err := self.getKV().Get(key)
 	if err != nil {

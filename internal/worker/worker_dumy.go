@@ -59,7 +59,9 @@ func (wk *DumyWorker) RunTask(tsk task.Task) {
 	fileops.Get(exec_file_key, exec_file_path)
 	os.Chmod(exec_file_path, 0777)
 	// run task
-	cmd := exec.Command(exec_file_path, strings.Split(cf.Base64De(exec_app_args), " ")...)
+	options := []string{} // add default args here
+	options = append(options, strings.Split(cf.Base64De(exec_app_args), " ")...)
+	cmd := exec.Command(exec_file_path, options...)
 	cmd.Env = append(cmd.Env, []string{
 		"CF_APP_UUID=" + app_id,
 		"CF_APP_HOST=" + wk.Kvops.Host(),

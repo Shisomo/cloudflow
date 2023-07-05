@@ -14,6 +14,7 @@ var CMD_Worker = &cobra.Command{
 	Short: "a short discription of worker",
 	Long:  "worker is ...., long description",
 	Run: func(cmd *cobra.Command, args []string) {
+		commPreProcess()
 		cfg := GetAppCfg()
 		cf.SetCfg(&cfg, "cf.services.state.scope", app_scope)
 		cf.SetCfg(&cfg, "cf.app_nid", app_nodeid)

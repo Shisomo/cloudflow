@@ -11,7 +11,6 @@ type Flow struct {
 	Sess  *Session `json:"-"`
 	Nodes []*Node  `json:"node"`
 	Idx   int      `json:"index"`
-	CTime int64    `json:"ctime"`
 	cf.CommStat
 }
 
@@ -23,9 +22,9 @@ func NewFlow(se *Session, name string) *Flow {
 		Uuid:  cf.AsMd5(se.Uuid + cf.Itos(__flow_index__)),
 		Sess:  se,
 		Idx:   __flow_index__,
-		CTime: cf.Timestamp(),
 		Nodes: []*Node{},
 	}
+	flow.CTime = cf.Timestamp()
 	__flow_index__ += 1
 	se.Flows = append(se.Flows, &flow)
 	flow.Parent = "sess." + se.Uuid

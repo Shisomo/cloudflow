@@ -16,6 +16,7 @@ var CMD_Stat = &cobra.Command{
 	Long:    "stat is ...., long description",
 	Aliases: []string{"s", "st", "stat"},
 	Run: func(cmd *cobra.Command, args []string) {
+		commPreProcess()
 		cfg := GetAppCfg()
 		cf.SetCfg(&cfg, "cf.services.state.scope", app_scope)
 		cf.SetCfg(&cfg, "cf.app_nid", app_nodeid)

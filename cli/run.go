@@ -17,6 +17,7 @@ var CMD_Run = &cobra.Command{
 	Aliases: []string{"r"},
 	Args:    cobra.RangeArgs(3, 4),
 	Run: func(cmd *cobra.Command, args []string) {
+		commPreProcess()
 		// init config
 		cfg := GetAppCfg()
 		cf.SetCfg(&cfg, "cf.services.state.scope", app_scope)
