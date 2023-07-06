@@ -153,7 +153,7 @@ func (dc *DataCache) Get() ([]interface{}, bool) {
 				cf.Assert(has, "no default value find for empty queue")
 			}
 			pstime := cf.Timestamp()
-			raw_msg := cf.ParsMsg(data)["app_data"]
+			raw_msg := cf.ParseMsg(data)["app_data"]
 			time_dt_pars += (cf.Timestamp() - pstime)
 			time_dt_cout += 1
 			cf.Assert(raw_msg != nil, "app data can not be nil")
@@ -184,7 +184,7 @@ func (dc *DataCache) Get() ([]interface{}, bool) {
 				cf.Assert(has, "no default value find for empty queue")
 			}
 			pstime := cf.Timestamp()
-			msg := cf.ParsMsg(data)["app_data"].([]interface{})
+			msg := cf.ParseMsg(data)["app_data"].([]interface{})
 			time_dt_pars += (cf.Timestamp() - pstime)
 			time_dt_cout += 1
 			if item_size == 0 {

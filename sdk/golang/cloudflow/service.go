@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"time"
 )
 
 type Service struct {
@@ -45,7 +46,7 @@ func (srv *Service) MarshalJSON() ([]byte, error) {
 var __srv_index__ int = 0
 
 func NewService(app *App, fc interface{}, name string, args ...interface{}) *Service {
-	ex_args, options := ParsOptions(args...)
+	ex_args, options := ParsOptions(args)
 	var srv = Service{
 		IsExit:   false,
 		Name:     name,
@@ -91,7 +92,7 @@ func (srv *Service) PreCall() {
 	srv.callCount += 1
 }
 
-func (srv *Service) Call(a []interface{}) []interface{} {
+func (srv *Service) Call(a ...interface{}) []interface{} {
 	args := []interface{}{srv}
 	args = append(args, a...)
 	args = append(args, srv.ExArgs...)
@@ -193,4 +194,40 @@ func (srv *Service) PerfLogInter() int {
 
 func (srv *Service) GetName() string {
 	return srv.Name
+}
+
+func (self *Service) Run() int64 {
+	chs_i, chs_o := self.InOutChs()
+	cf.Log("start Server(", self.Uuid, ") with:", chs_i, "=>", chs_o, self.FuncName())
+	msg_index := int64(0)
+	self.StartCall()
+	cf.Assert(len(chs_i) > 0, "input channel is empty")
+	// data process
+	cf.Log("watch:", chs_i)
+	cnkeys := []string{}
+	cnkeys = append(cnkeys, self.chOps.Watch(self.UUID(), chs_i, func(worker, subj, data string) bool {
+		request, err := cf.ParseMsgE(data)
+		if err != nil {
+			cf.Log("get args fail:", err)
+			return false
+		}
+		args, has := request["app_data"]
+		if !has {
+			cf.Log("parse args fail:", err)
+			return false
+		}
+		ret_data := self.Call(args.([]interface{})...)
+		self.chOps.Put(chs_o, cf.MakeMsg(msg_index, ret_data, cf.K_MESSAGE_NORM, request))
+		msg_index += 1
+		return true
+	})...)
+	// loop check and callback
+	for {
+		if self.Exited() {
+			self.chOps.CStop(cnkeys)
+			break
+		}
+		time.Sleep(time.Second)
+	}
+	return msg_index
 }

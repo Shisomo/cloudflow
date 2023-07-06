@@ -26,9 +26,10 @@ type Node struct {
 	ExArgs   []interface{} `json:"-"`
 	Batch    int           `json:"batch"`
 	InsCount int           `json:"inscount"`
+	InsRange []int         `json:"insrange"`
 	InType   string        `json:"intype"` // Queue [default], Sub
 	OuType   string        `json:"outype"` // Single [default], Mut, All
-	InChan   [][]int       `json:"inchan"` // Empty [default] all pre-nodes output, pre-node's output index
+	InChan   []int         `json:"inchan"` // Empty [default] all pre-nodes output, pre-node's output index
 	// extra-params
 	outCount  int             `json:"-"`
 	inCount   int             `json:"-"`
@@ -42,6 +43,7 @@ type Node struct {
 	chOps     chops.ChannelOp `json:"-"`
 	defaultv  []interface{}   `json:"-"`
 	ignoreRet bool            `json:"-"`
+	retMask   map[int]int     `json:"-"`
 	cf.CommStat
 }
 
@@ -64,7 +66,7 @@ func (node *Node) String() string {
 
 var __node_index__ int = 0
 
-func NewNode(flow *Flow, kw ...map[string]interface{}) *Node {
+func newNode(flow *Flow, kw ...map[string]interface{}) *Node {
 	var node = Node{
 		Idx:       __node_index__,
 		Flow:      flow,
@@ -74,12 +76,15 @@ func NewNode(flow *Flow, kw ...map[string]interface{}) *Node {
 		Batch:     1,
 		PerfInter: 0,
 		InType:    cf.NODE_ITYPE_QUEUE,
-		OuType:    cf.NODE_OUYPE_ALL,
-		InChan:    [][]int{},
+		OuType:    cf.NODE_OUYPE_SGL,
+		InsRange:  []int{},
+		InChan:    []int{},
+		retMask:   map[int]int{},
 	}
 	node.CTime = cf.Timestamp()
 	__node_index__ += 1
 	node.Update(kw...)
+	flow.AddNode(&node)
 	node.Parent = cf.DotS(cf.K_AB_FLOW, flow.Uuid)
 	node.AppUid = flow.Sess.App.Uuid
 	node.Cstat = cf.K_STAT_WAIT
@@ -95,18 +100,30 @@ func (node *Node) Update(kw ...map[string]interface{}) {
 	node.Uuid = cf.AsMd5(identies)
 }
 
-func (node *Node) append(fc interface{}, name string, args ...interface{}) *Node {
-	ex_args, options := ParsOptions(args...)
-	var new_node = NewNode(node.Flow, map[string]interface{}{
+func MakeNode(flow *Flow, fc interface{}, name string, ex_args ...interface{}) *Node {
+	var new_node = newNode(flow, map[string]interface{}{
 		"Name":     name,
 		"Func":     fc,
 		"ExArgs":   ex_args,
 		"InsCount": 1,
 	})
+	ref_fc := reflect.ValueOf(fc).Type()
+	new_node.inCount = ref_fc.NumIn()
+	new_node.outCount = ref_fc.NumOut()
+	return new_node
+}
+
+func (node *Node) append(fc interface{}, name string, args ...interface{}) *Node {
+	ex_args, options := ParsOptions(args)
+	new_node := MakeNode(node.Flow, fc, name, ex_args...)
+	new_node.Update(options)
+	if len(new_node.InChan) > 0 {
+		cf.Assert(node.OuType == cf.NODE_OUYPE_MUT,
+			"node.OuType can not be %s", node.OuType)
+	}
+	// append
 	new_node.PreNodes = append(new_node.PreNodes, node)
 	node.NexNodes = append(node.NexNodes, new_node)
-	new_node.Update(options)
-	node.Flow.AddNode(new_node)
 	return new_node
 }
 
@@ -124,6 +141,33 @@ func (node *Node) Reduce(fc interface{}, name string, batch int, args ...interfa
 	v := node.append(fc, name, args...)
 	v.Batch = batch
 	return v
+}
+
+func Merge(fc interface{}, name string, nodes []*Node, args ...interface{}) *Node {
+	ex_args, options := ParsOptions(args)
+	cf.Assert(len(nodes) > 1, "Merge need Nodes(%d) > 1", len(nodes))
+	node := MakeNode(nodes[1].Flow, fc, name, ex_args...)
+	node.Update(options)
+	chsize := len(node.InChan)
+	cf.Assert(chsize == 0 || chsize == len(nodes), "InChan need be empty size == nodes.size (%d != %d)", chsize, len(nodes))
+	var flow *Flow
+	for idx, n := range nodes {
+		if flow == nil {
+			flow = n.Flow
+		}
+		if n.OuType == cf.NODE_OUYPE_MUT {
+			cf.Assert(chsize == len(nodes), "need assigne InChan option")
+		}
+		cf.Assert(flow == n.Flow, "Only can merge nodes in the same flow (%s != %s[%d])", flow.Name, n.Flow.Name, idx)
+		if chsize > 0 {
+			sub_chsize := node.InChan[idx]
+			cf.Assert(sub_chsize < n.outCount, "check inchan fail")
+		}
+		// append
+		n.NexNodes = append(n.NexNodes, node)
+		node.PreNodes = append(node.PreNodes, n)
+	}
+	return node
 }
 
 func (node *Node) GetSession() *Session {
@@ -168,9 +212,10 @@ func (node *Node) StartCall() {
 func (node *Node) PreCall() {
 	node.callCount += 1
 	node.ignoreRet = false
+	node.retMask = map[int]int{}
 }
 
-func (node *Node) Call(a []interface{}) []interface{} {
+func (node *Node) Call(a ...interface{}) []interface{} {
 	args := []interface{}{node}
 	args = append(args, a...)
 	args = append(args, node.ExArgs...)
@@ -178,6 +223,15 @@ func (node *Node) Call(a []interface{}) []interface{} {
 	ret := cf.FuncCall(node.Func, args)
 	if node.Exited() {
 		node.callCount -= 1
+	}
+	switch node.OuType {
+	case cf.NODE_OUYPE_SGL:
+		return ret
+	case cf.NODE_OUYPE_MUT:
+		cf.Assert(len(ret) == 1, "need only one return, but find: %d", len(ret))
+		return ret[0].([]interface{})
+	default:
+		cf.Assert(false, "node.outype(%s) not support", node.OuType)
 	}
 	return ret
 }
@@ -195,12 +249,37 @@ func (node *Node) Exit(reason string) {
 }
 
 func (node *Node) InOutChs() ([]string, []string) {
+	// Need only one input channel from each pre-node
+	// Output
+	ou_ch := []string{}
+	ch_id := strings.Split(node.Uuid, "-")[0]
+	switch node.OuType {
+	case cf.NODE_OUYPE_MUT:
+		for i := 0; i < node.outCount; i++ {
+			ou_ch = append(ou_ch, "out", cf.DotS(ch_id, cf.Astr(i)))
+		}
+	case cf.NODE_OUYPE_SGL:
+		ou_ch = []string{cf.DotS(ch_id, "out")}
+	default:
+		cf.Assert(false, "node out type(%s) not support", node.OuType)
+	}
+	// Input
 	in_ch := []string{}
-	for _, n := range node.PreNodes {
-		in_ch = append(in_ch, cf.DotS(n.Uuid, "out"))
+	for idx, n := range node.PreNodes {
+		pn_id := strings.Split(n.Uuid, "-")[0]
+		switch n.OuType {
+		case cf.NODE_OUYPE_MUT:
+			nid := node.InChan[idx]
+			cf.Assert(nid > 0 && nid < n.outCount, "channel index error: 0 < %d < %d", nid, n.outCount)
+			in_ch = append(in_ch, cf.DotS(n.Uuid, "out", cf.Astr(nid)))
+		case cf.NODE_OUYPE_SGL:
+			in_ch = append(in_ch, cf.DotS(pn_id, "out"))
+		default:
+			cf.Assert(false, "node out type(%s) not support", n.OuType)
+		}
 	}
 	// uuid-0 => uuid
-	return in_ch, []string{cf.DotS(strings.Split(node.Uuid, "-")[0], "out")}
+	return in_ch, ou_ch
 }
 
 func (node *Node) SetSubIdx(idx int) {
@@ -307,4 +386,117 @@ func (node *Node) PerfLogInter() int {
 
 func (node *Node) GetName() string {
 	return node.Name
+}
+
+func (node *Node) MarkRet(msk ...int) {
+	for _, v := range msk {
+		node.retMask[v] = v
+	}
+}
+
+func (self *Node) makeResponse(msg_index int64, outch []string, rets []interface{}) {
+	cf.Assert(len(rets) > 0, "need ret data > 0, ret: %s", rets)
+	if self.OuType == cf.NODE_OUYPE_SGL {
+		self.chOps.Put(outch, cf.MakeMsg(msg_index, rets, cf.K_MESSAGE_NORM))
+	} else {
+		cf.Assert(self.OuType == cf.NODE_OUYPE_MUT, "need OuType be: %s", cf.NODE_OUYPE_MUT)
+		cf.Assert(len(outch) == self.outCount,
+			"out channels not match in Mut Output mode (%d != %d)", len(outch), self.outCount)
+		for i := 0; i < self.outCount; i++ {
+			if len(self.retMask) > 0 {
+				_, has := self.retMask[i]
+				if !has {
+					continue
+				}
+			}
+			self.chOps.Put(outch[i:i+1], cf.MakeMsg(msg_index, rets[i:i+1], cf.K_MESSAGE_NORM))
+		}
+	}
+}
+
+func (self *Node) Run() int64 {
+	chs_i, chs_o := self.InOutChs()
+	cf.Log("start worker(", self.Uuid, ") with:", chs_i, "=>", chs_o, self.FuncName())
+
+	msg_index := int64(0)
+	self.StartCall()
+	time_ch_exit := cf.Timestamp()
+
+	if len(chs_i) < 1 {
+		// data source node
+		for {
+			rets := self.Call()
+			if !self.IsIgnoreRet() {
+				self.makeResponse(msg_index, chs_o, rets)
+			}
+			if self.Exited() {
+				break
+			}
+			msg_index += 1
+		}
+	} else {
+		// data process
+		perf_log_inter := self.PerfLogInter()
+		exit_loop := false
+		cf.Log("watch:", chs_i)
+		data_cache := InitChDataCache(chs_i, self.GetBatchSize(), perf_log_inter > 0)
+		cnkeys := []string{}
+		switch self.InType {
+		case cf.NODE_ITYPE_QUEUE:
+			cnkeys = append(cnkeys, self.chOps.Watch(self.UUID(), chs_i, func(worker, subj, data string) bool {
+				cf.Assert(!exit_loop, "get queue data from empty node: %s", data)
+				data_cache.Put(subj, data)
+				return true
+			})...)
+		case cf.NODE_ITYPE_SUBSC:
+			cnkeys = append(cnkeys, self.chOps.Sub(self.UUID(), chs_i, func(worker, subj, data string) bool {
+				cf.Assert(!exit_loop, "get sub data from empty node: %s", data)
+				data_cache.Put(subj, data)
+				return true
+			})...)
+		default:
+			cf.Assert(false, "node intype:%s not supported", self.InType)
+		}
+		// loop check and callback
+		loop_count := 0
+		for {
+			loop_count += 1
+			args_get, all_dfv := data_cache.Get()
+			if len(args_get) < 1 || all_dfv {
+				if cf.Timestamp()-time_ch_exit > int64(time.Second) {
+					// check exit
+					ch_val, all_exit := self.GetExitChs()
+					if all_exit && all_dfv {
+						if self.chOps.CEmpty(cnkeys) {
+							self.chOps.CStop(cnkeys)
+							self.Exit("no input")
+							exit_loop = true
+						}
+					}
+					data_cache.SetExitValue(cf.KVMakeMsg(ch_val))
+					time_ch_exit = cf.Timestamp()
+				}
+				time.Sleep(100 * time.Millisecond)
+				if !exit_loop {
+					continue
+				}
+			}
+			time_ch_exit = cf.Timestamp()
+			rets := self.Call(args_get...)
+			data_cache.UpdateExSpeed("call", time_ch_exit)
+			if !self.IsIgnoreRet() {
+				self.makeResponse(msg_index, chs_o, rets)
+				msg_index += 1
+			}
+			// log performance statistics
+			if perf_log_inter > 0 && loop_count%perf_log_inter == 0 {
+				cf.Log(data_cache.Stat())
+				data_cache.ClearStat()
+			}
+			if exit_loop {
+				break
+			}
+		}
+	}
+	return msg_index
 }

@@ -482,13 +482,22 @@ func FmStr(f string, a ...interface{}) string {
 	return fmt.Sprintf(f, a...)
 }
 
-func MakeMsg(index int, data []interface{}, cdata string) string {
+func MakeMsg(index int64, data []interface{}, cdata string, ex_data ...map[string]interface{}) string {
 	cl_data := map[string]interface{}{
 		"index":     index,
 		"lang_type": "golang",
 		"lang_name": runtime.Version(),
 		"ctrl_data": cdata,
 		"app_data":  data,
+	}
+	ex_da := map[string]interface{}{}
+	for _, d := range ex_data {
+		for k, v := range d {
+			ex_da[k] = v
+		}
+	}
+	if len(ex_da) > 0 {
+		cl_data["ex_data"] = ex_da
 	}
 	return Base64En(AsJson(cl_data))
 }
@@ -502,10 +511,23 @@ func KVMakeMsg(data map[string][]interface{}) map[string]string {
 	return ret
 }
 
-func ParsMsg(data string) map[string]interface{} {
+func ParseMsg(data string) map[string]interface{} {
 	ret := MapFrJson(Base64De(data))
 	ret["index"] = int(ret["index"].(float64))
 	return ret
+}
+
+func ParseMsgE(data string) (map[string]interface{}, error) {
+	decoded, err := base64.StdEncoding.DecodeString(data)
+	if err != nil {
+		return nil, err
+	}
+	var v map[string]interface{}
+	err = json.Unmarshal(decoded, &v)
+	if err != nil {
+		return nil, err
+	}
+	return v, nil
 }
 
 func ZipAppend(data [][]interface{}, value []interface{}) [][]interface{} {

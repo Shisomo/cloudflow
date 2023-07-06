@@ -8,13 +8,7 @@ import (
 
 type RunInterface interface {
 	GetName() string
-	Exited() bool
-	StartCall()
-	PreCall()
-	Call(args []interface{}) []interface{}
 	SyncState()
-	Exit(reason string)
-	InOutChs() ([]string, []string)
 	SetSubIdx(idx int)
 	SetKVOps(ops kvops.KVOp)
 	SetMsgOps(ops chops.ChannelOp)
@@ -22,13 +16,9 @@ type RunInterface interface {
 	MsgLogf(fmt string, a ...interface{})
 	FuncName() string
 	InstanceCount() int
-	GetBatchSize() int
-	GetExitChs() (map[string][]interface{}, bool)
 	UpdateUUID(node_key string)
 	UUID() string
-	IgnoreRet()
-	IsIgnoreRet() bool
 	CallCount() int64
 	AsTask() task.Task
-	PerfLogInter() int
+	Run() int64
 }

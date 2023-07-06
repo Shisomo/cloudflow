@@ -93,81 +93,8 @@ func (app *App) runNode() {
 	CheckNodeSrvInsCount(statops, ntype, node_key, subindex, ins)
 	ins.SetMsgOps(msgops)
 
-	chs_i, chs_o := ins.InOutChs()
-	cf.Log("start worker(", node_key, ") with:", chs_i, "=>", chs_o, ins.FuncName())
-
-	msg_index := 0
-	ins.StartCall()
-	time_ch_exit := cf.Timestamp()
-
-	if len(chs_i) < 1 {
-		// data source node
-		for {
-			args := []interface{}{}
-			rets := ins.Call(args)
-			cf.Assert(len(rets) > 0, "func ret empty")
-			if !ins.IsIgnoreRet() {
-				msgops.Put(chs_o, cf.MakeMsg(msg_index, rets, cf.K_MESSAGE_NORM))
-			}
-			if ins.Exited() {
-				break
-			}
-			msg_index += 1
-		}
-	} else {
-		// data process
-		perf_log_inter := ins.PerfLogInter()
-		exit_loop := false
-		cf.Log("watch:", chs_i)
-		data_cache := InitChDataCache(chs_i, ins.GetBatchSize(), perf_log_inter > 0)
-		cnkeys := []string{}
-		cnkeys = append(cnkeys, msgops.Watch(ins.UUID(), chs_i, func(worker, subj, data string) bool {
-			cf.Assert(!exit_loop, "get data from empty node: %s", data)
-			data_cache.Put(subj, data)
-			return true
-		})...)
-		// loop check and callback
-		loop_count := 0
-		for {
-			loop_count += 1
-			args_get, all_dfv := data_cache.Get()
-			if len(args_get) < 1 || all_dfv {
-				if cf.Timestamp()-time_ch_exit > int64(time.Second) {
-					// check exit
-					ch_val, all_exit := ins.GetExitChs()
-					if all_exit && all_dfv {
-						if msgops.CEmpty(cnkeys) {
-							msgops.CStop(cnkeys)
-							ins.Exit("no input")
-							exit_loop = true
-						}
-					}
-					data_cache.SetExitValue(cf.KVMakeMsg(ch_val))
-					time_ch_exit = cf.Timestamp()
-				}
-				time.Sleep(100 * time.Millisecond)
-				if !exit_loop {
-					continue
-				}
-			}
-			time_ch_exit = cf.Timestamp()
-			rets := ins.Call(args_get)
-			data_cache.UpdateExSpeed("call", time_ch_exit)
-			if !ins.IsIgnoreRet() {
-				cf.Assert(len(rets) > 0, "need ret data > 0, ret: %s", rets)
-				msgops.Put(chs_o, cf.MakeMsg(msg_index, rets, cf.K_MESSAGE_NORM))
-				msg_index += 1
-			}
-			// log performance statistics
-			if perf_log_inter > 0 && loop_count%perf_log_inter == 0 {
-				cf.Log(data_cache.Stat())
-				data_cache.ClearStat()
-			}
-			if exit_loop {
-				break
-			}
-		}
-	}
+	// run node
+	msg_index := ins.Run()
 	// update task state
 	ins.SyncState()
 	task.UpdateStat(statops, ins.AsTask(), cf.K_STAT_EXIT, ins.UUID())

@@ -36,15 +36,9 @@ func (f *Flow) String() string {
 }
 
 func (flow *Flow) Add(fc interface{}, name string, args ...interface{}) *Node {
-	ex_args, options := ParsOptions(args...)
-	var new_node = NewNode(flow, map[string]interface{}{
-		"Name":     name,
-		"Func":     fc,
-		"ExArgs":   ex_args,
-		"InsCount": 1,
-	})
+	ex_args, options := ParsOptions(args)
+	var new_node = MakeNode(flow, fc, name, ex_args...)
 	new_node.Update(options)
-	flow.AddNode(new_node)
 	return new_node
 }
 
