@@ -94,22 +94,24 @@ func main() {
 
 先定义数据产生，处理函数，如果通过CloudFlow接口构建Flow，然后执行。执行过程中CloudFlow会根据参数选择是单节点，多节点还是基于K8s环境执行。对于用户而言，感觉是在本地执行。
 
-输出：
-```
-...
-<node.6eceff87e06b40f130de264cb3c229b7-5> 2023/06/28 22:44:30.722110 node.go:264: node.6eceff87e06b40f130de264cb3c229b7-5 (main.CountWords) exit (recv: 234, send: 234) cost 12s
-cloudflow:2023/06/28 22:44:30.723466 cloudflow.go:101: 8288ac38bd78f0c8c2b9c0511611eeed node.6eceff87e06b40f130de264cb3c229b7-5 (main.CountWords) exit (recv: 234, send: 234) cost 12s
-<node.6eceff87e06b40f130de264cb3c229b7-7> 2023/06/28 22:44:30.752858 node.go:264: node.6eceff87e06b40f130de264cb3c229b7-7 (main.CountWords) exit (recv: 124, send: 124) cost 10s
-cloudflow:2023/06/28 22:44:30.755942 cloudflow.go:101: 8288ac38bd78f0c8c2b9c0511611eeed node.6eceff87e06b40f130de264cb3c229b7-7 (main.CountWords) exit (recv: 124, send: 124) cost 10s
-<node.c0ccc187dc3c050a9be9fca94d85bd51> 2023/06/28 22:44:32.615482 node.go:264: all words: 100000, redu speed:18, calls: 195
-cloudflow:2023/06/28 22:44:32.616530 cloudflow.go:101: 8288ac38bd78f0c8c2b9c0511611eeed all words: 100000, redu speed:18, calls: 195
-<node.c0ccc187dc3c050a9be9fca94d85bd51> 2023/06/28 22:44:32.671459 node.go:264: node.c0ccc187dc3c050a9be9fca94d85bd51 (main.ReduceWords) exit (recv: 194, send: 0) cost 10s
-cloudflow:2023/06/28 22:44:32.672532 cloudflow.go:101: 8288ac38bd78f0c8c2b9c0511611eeed node.c0ccc187dc3c050a9be9fca94d85bd51 (main.ReduceWords) exit (recv: 194, send: 0) cost 10s
-```
-
 #### （五）快速开始
 
-1. 安装 TBD
+**1. 安装&运行**
+```
+# 安装 etcd 
+请参考 https://etcd.io/docs/v3.5/install/
+
+# 安装 jet stream
+请参考 https://nats.io/download/
+
+# 启动前置服务
+bash script/startsrvs.bash
+
+# 执行用例
+bash script/reinitall.bash; bash script/cloudflow.bash -d example gigasort
+
+```
+
 2. 验证 TBD
 
 #### （六）开发文档
@@ -119,3 +121,7 @@ cloudflow:2023/06/28 22:44:32.672532 cloudflow.go:101: 8288ac38bd78f0c8c2b9c0511
 3. [文件存储](doc/03-filestore.md)
 4. KV存储
 5. TBD
+
+#### (七)开发任务
+
+[任务清单](doc/99-todolist.md)

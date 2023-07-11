@@ -21,6 +21,7 @@ type Node struct {
 	Uuid     string        `json:"uuid"`
 	Idx      int           `json:"index"`
 	SubIdx   int           `json:"subidx"`
+	DispSize int           `json:"dispatchsize"`
 	PreNodes []*Node       `json:"-"`
 	NexNodes []*Node       `json:"-"`
 	ExArgs   []interface{} `json:"-"`
@@ -110,6 +111,10 @@ func MakeNode(flow *Flow, fc interface{}, name string, ex_args ...interface{}) *
 	ref_fc := reflect.ValueOf(fc).Type()
 	new_node.inCount = ref_fc.NumIn()
 	new_node.outCount = ref_fc.NumOut()
+	if new_node.OuType == cf.NODE_OUYPE_MUT {
+		cf.Assert(new_node.outCount == 1, "Need only one return data, but %d find", new_node.outCount)
+		cf.Assert(ref_fc.Out(0).Kind() == reflect.Slice, "Need List return")
+	}
 	return new_node
 }
 
@@ -141,6 +146,15 @@ func (node *Node) Reduce(fc interface{}, name string, batch int, args ...interfa
 	v := node.append(fc, name, args...)
 	v.Batch = batch
 	return v
+}
+
+func (node *Node) Dispatch(fc interface{}, name string, dispatch_size int, arg ...interface{}) *Node {
+	cf.Assert(node.OuType == cf.NODE_OUYPE_MUT, "only mut output support dispatch")
+	n := node.append(fc, name, arg...)
+	n.InsCount = dispatch_size
+	n.InChan = cf.Range(0, dispatch_size)
+	n.InType = cf.NODE_ITYPE_INSPC
+	return n
 }
 
 func Merge(fc interface{}, name string, nodes []*Node, args ...interface{}) *Node {
@@ -215,6 +229,17 @@ func (node *Node) PreCall() {
 	node.retMask = map[int]int{}
 }
 
+func (node *Node) getDefautRet(idx ...int) []interface{} {
+	if node.OuType != cf.NODE_OUYPE_MUT {
+		return node.defaultv
+	}
+	cf.Assert(len(node.defaultv) == 1, "MUT out, need only one list return")
+	ret := []interface{}{
+		cf.AsSliceValue(node.defaultv[0]),
+	}
+	return ret
+}
+
 func (node *Node) Call(a ...interface{}) []interface{} {
 	args := []interface{}{node}
 	args = append(args, a...)
@@ -228,8 +253,8 @@ func (node *Node) Call(a ...interface{}) []interface{} {
 	case cf.NODE_OUYPE_SGL:
 		return ret
 	case cf.NODE_OUYPE_MUT:
-		cf.Assert(len(ret) == 1, "need only one return, but find: %d", len(ret))
-		return ret[0].([]interface{})
+		cf.Assert(len(ret) == 1, "need only one List return, but find: %d", len(ret))
+		return cf.JAsType(ret[0], reflect.ValueOf([]interface{}{}).Type()).([]interface{})
 	default:
 		cf.Assert(false, "node.outype(%s) not support", node.OuType)
 	}
@@ -255,8 +280,8 @@ func (node *Node) InOutChs() ([]string, []string) {
 	ch_id := strings.Split(node.Uuid, "-")[0]
 	switch node.OuType {
 	case cf.NODE_OUYPE_MUT:
-		for i := 0; i < node.outCount; i++ {
-			ou_ch = append(ou_ch, "out", cf.DotS(ch_id, cf.Astr(i)))
+		for i := 0; i < node.DispSize; i++ {
+			ou_ch = append(ou_ch, cf.DotS(ch_id, "out", cf.Astr(i)))
 		}
 	case cf.NODE_OUYPE_SGL:
 		ou_ch = []string{cf.DotS(ch_id, "out")}
@@ -269,9 +294,13 @@ func (node *Node) InOutChs() ([]string, []string) {
 		pn_id := strings.Split(n.Uuid, "-")[0]
 		switch n.OuType {
 		case cf.NODE_OUYPE_MUT:
-			nid := node.InChan[idx]
-			cf.Assert(nid > 0 && nid < n.outCount, "channel index error: 0 < %d < %d", nid, n.outCount)
-			in_ch = append(in_ch, cf.DotS(n.Uuid, "out", cf.Astr(nid)))
+			if node.InType == cf.NODE_ITYPE_INSPC {
+				in_ch = append(in_ch, cf.DotS(n.Uuid, "out", cf.Astr(node.SubIdx)))
+			} else {
+				nid := node.InChan[idx]
+				cf.Assert(nid > 0 && nid < n.outCount, "channel index error: 0 < %d < %d", nid, n.outCount)
+				in_ch = append(in_ch, cf.DotS(n.Uuid, "out", cf.Astr(nid)))
+			}
 		case cf.NODE_OUYPE_SGL:
 			in_ch = append(in_ch, cf.DotS(pn_id, "out"))
 		default:
@@ -302,7 +331,7 @@ func (node *Node) GetBatchSize() int {
 	return node.Batch
 }
 
-func (node *Node) GetExitChs() (map[string][]interface{}, bool) {
+func (node *Node) GetExitChs(ichs []string) (map[string][]interface{}, bool) {
 	ch_val := map[string][]interface{}{}
 	all_exit := true
 	for _, n := range node.PreNodes {
@@ -314,7 +343,12 @@ func (node *Node) GetExitChs() (map[string][]interface{}, bool) {
 		if !is_exit.(bool) {
 			all_exit = false
 		} else {
-			ch_val[cf.DotS(n.Uuid, "out")] = n.defaultv
+			// mark exit
+			for _, ch := range ichs {
+				if strings.Contains(ch, n.Uuid) {
+					ch_val[ch] = n.getDefautRet(node.SubIdx)
+				}
+			}
 		}
 		ins_count := int(node.kvOps.Get(cf.DotS(cf.K_AB_NODE, n.Uuid, cf.K_MEMBER_INSCOUNT)).(float64))
 		for i := 1; i < ins_count; i++ {
@@ -327,7 +361,12 @@ func (node *Node) GetExitChs() (map[string][]interface{}, bool) {
 			if !is_exit.(bool) {
 				all_exit = false
 			} else {
-				ch_val[cf.DotS(uuid, "out")] = n.defaultv
+				// mark exit
+				for _, ch := range ichs {
+					if strings.Contains(ch, n.Uuid) {
+						ch_val[ch] = n.getDefautRet(node.SubIdx)
+					}
+				}
 			}
 		}
 	}
@@ -400,9 +439,9 @@ func (self *Node) makeResponse(msg_index int64, outch []string, rets []interface
 		self.chOps.Put(outch, cf.MakeMsg(msg_index, rets, cf.K_MESSAGE_NORM))
 	} else {
 		cf.Assert(self.OuType == cf.NODE_OUYPE_MUT, "need OuType be: %s", cf.NODE_OUYPE_MUT)
-		cf.Assert(len(outch) == self.outCount,
-			"out channels not match in Mut Output mode (%d != %d)", len(outch), self.outCount)
-		for i := 0; i < self.outCount; i++ {
+		cf.Assert(len(outch) == self.DispSize,
+			"out channels not match in Mut Output mode (out:%d != dispatchsize:%d), ch: %s", len(outch), self.DispSize, outch)
+		for i := 0; i < self.DispSize; i++ {
 			if len(self.retMask) > 0 {
 				_, has := self.retMask[i]
 				if !has {
@@ -421,6 +460,8 @@ func (self *Node) Run() int64 {
 	msg_index := int64(0)
 	self.StartCall()
 	time_ch_exit := cf.Timestamp()
+	self.Cstat = cf.K_STAT_WORK
+	self.SyncState()
 
 	if len(chs_i) < 1 {
 		// data source node
@@ -442,7 +483,7 @@ func (self *Node) Run() int64 {
 		data_cache := InitChDataCache(chs_i, self.GetBatchSize(), perf_log_inter > 0)
 		cnkeys := []string{}
 		switch self.InType {
-		case cf.NODE_ITYPE_QUEUE:
+		case cf.NODE_ITYPE_QUEUE, cf.NODE_ITYPE_INSPC:
 			cnkeys = append(cnkeys, self.chOps.Watch(self.UUID(), chs_i, func(worker, subj, data string) bool {
 				cf.Assert(!exit_loop, "get queue data from empty node: %s", data)
 				data_cache.Put(subj, data)
@@ -465,7 +506,7 @@ func (self *Node) Run() int64 {
 			if len(args_get) < 1 || all_dfv {
 				if cf.Timestamp()-time_ch_exit > int64(time.Second) {
 					// check exit
-					ch_val, all_exit := self.GetExitChs()
+					ch_val, all_exit := self.GetExitChs(chs_i)
 					if all_exit && all_dfv {
 						if self.chOps.CEmpty(cnkeys) {
 							self.chOps.CStop(cnkeys)

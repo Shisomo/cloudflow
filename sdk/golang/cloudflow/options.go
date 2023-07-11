@@ -102,3 +102,11 @@ func OpOutType(otype string) CloudFlowOption {
 		}
 	})
 }
+
+func OpDispatchSize(size int) CloudFlowOption {
+	return NewCFOption(func() OPS {
+		return OPS{
+			"DispSize": size,
+		}
+	})
+}

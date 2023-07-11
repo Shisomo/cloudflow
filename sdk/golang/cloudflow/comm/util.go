@@ -118,6 +118,14 @@ func DumpKV(data *map[string]interface{}, result *map[string]interface{}, prefix
 			DumpKV(&v, data, k, lkey, skey)
 		case reflect.Slice, reflect.Array:
 			v := v.([]interface{})
+			if len(v) > 0 {
+				switch v[0].(type) {
+				case uint, uint8, uint16, uint32, uint64,
+					int, int16, int8, int32, int64, float32, float64:
+					(*result)[npref] = v
+					continue
+				}
+			}
 			for _, itm := range v {
 				itm := itm.(map[string]interface{})
 				uuid := itm[lkey].(string)
@@ -377,7 +385,7 @@ func FuncName(fc interface{}) string {
 	return runtime.FuncForPC(ref_fc.Pointer()).Name()
 }
 
-func defValue(tgt reflect.Type) interface{} {
+func GetDefaultValue(tgt reflect.Type) interface{} {
 	kd := tgt.Kind()
 	switch kd {
 	case reflect.Map:
@@ -399,12 +407,28 @@ func defValue(tgt reflect.Type) interface{} {
 	return nil
 }
 
+func AsSliceValue(t interface{}) interface{} {
+	tgt := reflect.ValueOf(t).Type()
+	switch tgt.Kind() {
+	case reflect.Array, reflect.Slice:
+		v := reflect.MakeSlice(tgt, 1, 1)
+		return AsDefaultValue(v.Index(0).Interface())
+	default:
+		Assert(false, "need list input")
+		return nil
+	}
+}
+
+func AsDefaultValue(t interface{}) interface{} {
+	return GetDefaultValue(reflect.ValueOf(t).Type())
+}
+
 func FuncEmptyRet(fc interface{}) []interface{} {
 	ret_type := reflect.ValueOf(fc).Type()
 	ret_num := ret_type.NumOut()
 	ret := make([]interface{}, ret_num)
 	for i := range ret {
-		ret[i] = defValue(ret_type.Out(i))
+		ret[i] = GetDefaultValue(ret_type.Out(i))
 	}
 	Assert(ret != nil, "func:%s => %d return is nil", FuncName(fc), ret_type.NumOut())
 	return ret
@@ -473,7 +497,7 @@ func FuncCall(fc interface{}, args []interface{}) []interface{} {
 	Assert(ret_num == ned_num, "output number(%d) error != %d", ret_num, ned_num)
 	data := make([]interface{}, ret_num)
 	for i, v := range ret {
-		data[i] = v.Interface() //ValueOfRefl(v)
+		data[i] = v.Interface()
 	}
 	return data
 }
@@ -597,6 +621,14 @@ func MKeys(data interface{}) []string {
 	ret := []string{}
 	for _, k := range data_ref.MapKeys() {
 		ret = append(ret, Astr(k))
+	}
+	return ret
+}
+
+func Range(s, e int) []int {
+	ret := []int{}
+	for i := s; i < e; i++ {
+		ret = append(ret, i)
 	}
 	return ret
 }

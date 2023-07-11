@@ -41,5 +41,6 @@ const CFG_KEY_SRV_WORKER = "cf.worker"
 
 const NODE_ITYPE_QUEUE = "QUEUE"
 const NODE_ITYPE_SUBSC = "SUBSC"
+const NODE_ITYPE_INSPC = "INSPERCH"
 const NODE_OUYPE_MUT = "MUT"
 const NODE_OUYPE_SGL = "SGL"
