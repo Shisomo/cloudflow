@@ -10,10 +10,15 @@ type CfModuleOps interface {
 	Run()
 }
 
+//(kvops, cf.uuid, ?askv, "cfschedus", "working", "sche")
+
 func AddModuleAndToList(ops kvops.KVOp, md_uuid string, md_ky_data interface{},
 	list_prefix string, stat string, md_abr string) {
 	md_key := cf.DotS(md_abr, md_uuid)
 	ops.Set(cf.DotS(list_prefix, md_key), stat)
+	// 首先Dump分析scheduler或work结构体的结构，形成一个map对象
+	// SetKV则是将整个结构体存入kv-etcd中
+	// 逻辑中涉及kv存储格式的操作，如k需要加上 cfschedus.sche.`uuid`.k等等
 	ops.SetKV(cf.Dump(md_ky_data, md_key, "uuid", "cstat"), false)
 }
 

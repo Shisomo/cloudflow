@@ -2,6 +2,7 @@ package cloudflow
 
 import (
 	"cloudflow/sdk/golang/cloudflow/chops"
+	"cloudflow/sdk/golang/cloudflow/fileops"
 	"cloudflow/sdk/golang/cloudflow/kvops"
 	"cloudflow/sdk/golang/cloudflow/task"
 )
@@ -12,6 +13,7 @@ type RunInterface interface {
 	SetSubIdx(idx int)
 	SetKVOps(ops kvops.KVOp)
 	SetMsgOps(ops chops.ChannelOp)
+	SetFileOps(ops fileops.FileOps)
 	MsgLog(a ...interface{})
 	MsgLogf(fmt string, a ...interface{})
 	FuncName() string

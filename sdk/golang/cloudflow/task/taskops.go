@@ -14,26 +14,37 @@ type Task struct {
 func GetAllTasks(ops kvops.KVOp, stat string) []Task {
 	tasks := []Task{}
 	// get executable items: node, service
+	// 遍历前缀为cfapplist的值为空的切片[]
+	// cl.cfapplist.cfapp.d538effc0a709ca520030e04f77b1d90
 	for _, app := range cfmodule.ListKeys(ops, cf.K_CF_APPLIST, "") {
 		prefix_srv := cf.DotS(app, cf.K_AB_SERVICE)
+		// 遍历前缀为cfapp.srvs的所有状态为stat的服务
 		for _, srv := range cfmodule.ListKeys(ops, prefix_srv, stat) {
 			tasks = append(tasks, Task{
 				List_key: prefix_srv,
 				Uuid_key: srv,
 			})
 		}
+		// 遍历前缀为cfapp.sess的所有无状态的session切片
+		// cl.cfapp.d538effc0a709ca520030e04f77b1d90.sess.sess.2301f5ca1377bea4886c51fa3904b644
 		for _, ses := range cfmodule.ListKeys(ops, cf.DotS(app, cf.K_AB_SESSION), "") {
+			// 遍历前缀为sess.uuid.flow的所有无状态的flow切片
+			// cl.sess.2301f5ca1377bea4886c51fa3904b644.flow.flow.f6d5ac2649aba0240d8a88f1d6423e85
 			for _, flow := range cfmodule.ListKeys(ops, cf.DotS(ses, cf.K_AB_FLOW), "") {
 				prefix_node := cf.DotS(flow, cf.K_AB_NODE)
+				// 遍历前缀为flow_key.node的所有状态为stat的节点切片
+				// cl.flow.f6d5ac2649aba0240d8a88f1d6423e85.node.node.6a684c61e2557ee5159ba6f1b1b80344
 				for _, node := range cfmodule.ListKeys(ops, prefix_node, stat) {
 					tasks = append(tasks, Task{
-						List_key: prefix_node,
-						Uuid_key: node,
+						List_key: prefix_node, // flow.f6d5ac2649aba0240d8a88f1d6423e85.node
+						Uuid_key: node,        // node.6a684c61e2557ee5159ba6f1b1b80344
 					})
 				}
 			}
 		}
 	}
+	// 将所有状态为stat的服务srvs或节点node均加入tasks中
+	// ListKey会去除前缀，只保留uuid
 	return tasks
 }
 

@@ -11,6 +11,8 @@ import (
 
 var txtbook = "qwertyuiopasdfghjklzxcvbnm0987654321"
 
+// 测试数据生成
+// Function randWord 随机以txtbook中字符组成1-10位字符串string
 func rand_word() string {
 	length := 1 + rand.Intn(10)
 	bytes := []byte(txtbook)
@@ -22,6 +24,9 @@ func rand_word() string {
 	return string(result)
 }
 
+// 读数据
+// Add(readData, "read", 100_000, cf.OpInsCount(2))
+// Function readData
 func read_data(self *cf.Node, count int) string {
 	if self.UserData == nil {
 		comm.Info("start read ", count, " words")
@@ -36,12 +41,16 @@ func read_data(self *cf.Node, count int) string {
 	self.UserData = word_to_gen - 1
 	w := rand_word()
 	comm.Assert(w != "", "gen word fail")
+
 	return w
 }
 
+// Add(dispatch, "dispath", 0, cf.OpOutType(comm.NODE_OUYPE_MUT), cf.OpDispatchSize(len(txtbook)), cf.OpInsCount(2))
+// Function dispatch 负责大文件分片分配调度
 func dispatch(self *cf.Node, word string, index int) []string {
 	ret := make([]string, len(txtbook))
 	if self.Exited() {
+		// return ret
 		return ret
 	}
 	comm.Assert(self.OuType == comm.NODE_OUYPE_MUT, "")
@@ -55,7 +64,8 @@ func dispatch(self *cf.Node, word string, index int) []string {
 	return ret
 }
 
-// TBD: save data to shared storage
+// Dispatch(insertSort, "sort", len(txtbook)
+// Function insert_sort
 func insert_sort(self *cf.Node, w string, allprefix string) string {
 	prefix := string(allprefix[self.SubIdx])
 	if self.UserData == nil {
@@ -70,37 +80,67 @@ func insert_sort(self *cf.Node, w string, allprefix string) string {
 	} else {
 		st := sort.StringSlice(sorted_list)
 		st.Sort()
-		comm.Info("exit prefix: ", prefix, " size:", st.Len())
+		comm.Info("exit prefix: ", prefix, " self.prefix", self.SubIdx, " size:", st.Len())
+
+		//------------------------------------------------------------------
+		// 存储排序好的StringSlice
+		// 首先实例化本任务节点所属session的storage
+		storage := self.Flow.Sess.GetStorageOps()
+		// 打开文件
+		buf := storage.FileOpen(prefix)
+		// 写入文件
+		for _, v := range st {
+			buf.WriteString(v + " ")
+		}
+		// 上传文件
+		storage.FileFlush(prefix, buf)
 		return prefix
 	}
 }
 
-// TBD: read and merge the sorted data from shared storage
+// // Function merge_sort read and merge the sorted data from shared storage
 func merge_sort(self *cf.Node, prefix string) {
+	// 实例化本任务节点所属session的storage
+	storage := self.Flow.Sess.GetStorageOps()
+	// 添加上一届点所有分片信息至UserData
 	if prefix != "" {
 		if self.UserData == nil {
 			self.UserData = []string{}
 		}
 		self.UserData = append(self.UserData.([]string), prefix)
 	}
+	// merge操作，通过对分片的标签的排序实现
 	if self.Exited() {
+
 		keys := self.UserData.([]string)
 		st := sort.StringSlice(keys)
 		st.Sort()
-		comm.Info("exit merge: ", st)
-		comm.Assert(st.Len() == len(txtbook), "merge key need == txtbook")
+		// merge结果文件创建
+		fileMergeBuffer := storage.FileOpen(storage.Scope())
+		// merge结果汇总
+		for _, v := range st {
+			sortBuffer := storage.FileOpen(v)
+			storage.FileClose(v)
+			fileMergeBuffer.ReadFrom(&sortBuffer)
+		}
+		// merge结果上传至共享存储
+		storage.FileFlush(storage.Scope(), fileMergeBuffer)
 	}
 }
 
 func Main_GigaSort(args ...string) {
 	// Need file storage support
 	app := cf.NewApp("gigasort")
-	flw := app.CreateSession("default").CreateFlow("flow1")
+	// 新建session，并以session的名"gigasort-Session-1"创建共享存储，实现不同session之间的隔离
+	flw := app.CreateSession("gigasort-Session-1").CreateFlow("flow1")
 	//                      -> sort(a,..) \
 	//                     /-> sort(b,..)  |
 	//     read -> dispatch -> sort(c,..)  |->merge
 	//                     \-> ...         |
 	//                      -> sort(z,..) /
+	//
+
+	// 首先添加文件生成的100_000個通过add readdata
 	flw.Add(read_data, "read", 100_000, cf.OpInsCount(2)).Add(dispatch, "dispath", 0,
 		cf.OpOutType(comm.NODE_OUYPE_MUT), cf.OpDispatchSize(len(txtbook)), cf.OpInsCount(2)).Dispatch(insert_sort,
 		"sort", len(txtbook), txtbook).Add(merge_sort, "merge")

@@ -3,6 +3,7 @@ package cloudflow
 import (
 	"cloudflow/sdk/golang/cloudflow/chops"
 	cf "cloudflow/sdk/golang/cloudflow/comm"
+	"cloudflow/sdk/golang/cloudflow/fileops"
 	"cloudflow/sdk/golang/cloudflow/kvops"
 	"cloudflow/sdk/golang/cloudflow/task"
 	"encoding/json"
@@ -26,6 +27,7 @@ type Service struct {
 	UserData  interface{}     `json:"-"`
 	kvOps     kvops.KVOp      `json:"-"`
 	chOps     chops.ChannelOp `json:"-"`
+	fileOps   fileops.FileOps `json:"-"`
 	callCount int64           `json:"-"`
 	cf.CommStat
 }
@@ -194,6 +196,10 @@ func (srv *Service) PerfLogInter() int {
 
 func (srv *Service) GetName() string {
 	return srv.Name
+}
+
+func (srv *Service) SetFileOps(ops fileops.FileOps) {
+	srv.fileOps = ops
 }
 
 func (self *Service) Run() int64 {

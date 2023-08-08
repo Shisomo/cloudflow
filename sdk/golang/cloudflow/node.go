@@ -3,6 +3,7 @@ package cloudflow
 import (
 	"cloudflow/sdk/golang/cloudflow/chops"
 	cf "cloudflow/sdk/golang/cloudflow/comm"
+	"cloudflow/sdk/golang/cloudflow/fileops"
 	"cloudflow/sdk/golang/cloudflow/kvops"
 	"cloudflow/sdk/golang/cloudflow/task"
 	"encoding/json"
@@ -42,6 +43,7 @@ type Node struct {
 	PerfInter int             `json:"-"`
 	kvOps     kvops.KVOp      `json:"-"`
 	chOps     chops.ChannelOp `json:"-"`
+	fileOps   fileops.FileOps `json:"-"`
 	defaultv  []interface{}   `json:"-"`
 	ignoreRet bool            `json:"-"`
 	retMask   map[int]int     `json:"-"`
@@ -74,6 +76,7 @@ func newNode(flow *Flow, kw ...map[string]interface{}) *Node {
 		UserData:  nil,
 		kvOps:     nil,
 		chOps:     nil,
+		fileOps:   nil,
 		Batch:     1,
 		PerfInter: 0,
 		InType:    cf.NODE_ITYPE_QUEUE,
@@ -119,6 +122,7 @@ func MakeNode(flow *Flow, fc interface{}, name string, ex_args ...interface{}) *
 }
 
 func (node *Node) append(fc interface{}, name string, args ...interface{}) *Node {
+	// 分析参数 将CloudFlowOption类型参数与其他参数分开
 	ex_args, options := ParsOptions(args)
 	new_node := MakeNode(node.Flow, fc, name, ex_args...)
 	new_node.Update(options)
@@ -451,6 +455,13 @@ func (self *Node) makeResponse(msg_index int64, outch []string, rets []interface
 			self.chOps.Put(outch[i:i+1], cf.MakeMsg(msg_index, rets[i:i+1], cf.K_MESSAGE_NORM))
 		}
 	}
+}
+
+func (node *Node) SetFileOps(ops fileops.FileOps) {
+	node.fileOps = ops
+}
+func (node *Node) GetFileOps() fileops.FileOps {
+	return node.fileOps
 }
 
 func (self *Node) Run() int64 {

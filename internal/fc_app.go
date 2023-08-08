@@ -28,6 +28,7 @@ func (self *CloudFlow) SubmitApp(app_key string, app_base64_cfg string, exec_fil
 
 		// upload exec file
 		cf.Log("start file storage service")
+
 		self.FileOps = fileops.GetFileOps(app_key, cf.GetCfgC(self.cfg, cf.CFG_KEY_SRV_FSTORE))
 		self.FileOps.Put(exec_file_key, exec_file)
 		self.FileOps.Close()

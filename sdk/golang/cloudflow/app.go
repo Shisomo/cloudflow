@@ -4,6 +4,7 @@ import (
 	"cloudflow/sdk/golang/cloudflow/cfmodule"
 	"cloudflow/sdk/golang/cloudflow/chops"
 	cf "cloudflow/sdk/golang/cloudflow/comm"
+	"cloudflow/sdk/golang/cloudflow/fileops"
 	"cloudflow/sdk/golang/cloudflow/kvops"
 	"cloudflow/sdk/golang/cloudflow/task"
 	"encoding/json"
@@ -54,6 +55,7 @@ func (app *App) getNode(key string) (string, int, RunInterface) {
 	}
 	if ntype == cf.K_AB_NODE {
 		for _, s := range app.Sess {
+
 			for _, f := range s.Flows {
 				for _, n := range f.Nodes {
 					if n.Uuid == uuid {
@@ -81,18 +83,27 @@ func (app *App) runNode() {
 		"scope": cf.EnvAPPScope(),
 		"imp":   cf.EnvAPPIMP(),
 	})
+	// node's etcd init
 	ins.SetKVOps(statops)
 	ins.UpdateUUID(node_key)
 
 	runcfg_tp := cf.FrJson(cf.Base64De(statops.Get(cf.DotS(cf.K_AB_CFAPP, app_id, cf.K_MEMBER_RUNCFG)).(string))).(map[string]interface{})
 	runcfg := cf.ConvertoCFG(&runcfg_tp)
 
+	// nats message's init
 	ch_cfg := cf.GetCfgC(&runcfg, "cf.services.message")
 	ch_cfg["app_id"] = app_id
 	msgops := chops.GetChOpsImp(ch_cfg)
 	CheckNodeSrvInsCount(statops, ntype, node_key, subindex, ins)
 	ins.SetMsgOps(msgops)
 
+	// file store's init
+	file_cfg := ch_cfg
+	fileops := fileops.GetFileOps(ins.GetName(), file_cfg)
+	ins.SetFileOps(fileops)
+	// session storage's init
+	// TBD: 初始化改为由node: ins 的flow的session进行初始化
+	app.Sess[0].InitSessionStorageOps(app.Sess[0].Name, ch_cfg)
 	// run node
 	msg_index := ins.Run()
 	// update task state
