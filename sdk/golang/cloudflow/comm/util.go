@@ -379,6 +379,12 @@ func MakeNatsUrl(host string, port interface{}) string {
 	}
 	return "nats://" + host + ":" + Astr(port)
 }
+func MakeRedisUrl(host string, port interface{}) string {
+	if strings.Contains(host, ":") || strings.Contains(host, "/") {
+		return host
+	}
+	return "redis://" + host + ":" + Astr(port) + "/0"
+}
 
 func FuncName(fc interface{}) string {
 	ref_fc := reflect.ValueOf(fc)
