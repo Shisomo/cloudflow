@@ -46,3 +46,8 @@ const NODE_ITYPE_SUBSC = "SUBSC"
 const NODE_ITYPE_INSPC = "INSPERCH"
 const NODE_OUYPE_MUT = "MUT"
 const NODE_OUYPE_SGL = "SGL"
+
+// storage file stat
+const STORAGE_FILE_STAT_ONWRITING = "writing"
+const STORAGE_FILE_STAT_ONREADIN = "reading"
+const STORAGE_FILE_STAT_FREE = "free"

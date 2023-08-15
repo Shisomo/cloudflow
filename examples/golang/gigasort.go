@@ -93,7 +93,8 @@ func insert_sort(self *cf.Node, w string, allprefix string) string {
 			buf.WriteString(v + " ")
 		}
 		// 上传文件
-		storage.FileFlush(prefix, buf)
+		storage.FileWrite(prefix, buf)
+		storage.FileClose(prefix)
 		return prefix
 	}
 }
@@ -120,11 +121,13 @@ func merge_sort(self *cf.Node, prefix string) {
 		// merge结果汇总
 		for _, v := range st {
 			sortBuffer := storage.FileOpen(v)
-			storage.FileClose(v)
 			fileMergeBuffer.ReadFrom(&sortBuffer)
+			storage.FileWrite(storage.Scope(), fileMergeBuffer)
+			fileMergeBuffer.Reset() // buf是值传递，在storage中reset没用
+			storage.FileClose(v)
 		}
 		// merge结果上传至共享存储
-		storage.FileFlush(storage.Scope(), fileMergeBuffer)
+		storage.FileClose(storage.Scope())
 	}
 }
 
@@ -141,7 +144,7 @@ func Main_GigaSort(args ...string) {
 	//
 
 	// 首先添加文件生成的100_000個通过add readdata
-	flw.Add(read_data, "read", 100_000, cf.OpInsCount(2)).Add(dispatch, "dispath", 0,
+	flw.Add(read_data, "read", 8060, cf.OpInsCount(2)).Add(dispatch, "dispath", 0,
 		cf.OpOutType(comm.NODE_OUYPE_MUT), cf.OpDispatchSize(len(txtbook)), cf.OpInsCount(2)).Dispatch(insert_sort,
 		"sort", len(txtbook), txtbook).Add(merge_sort, "merge")
 	app.Run()

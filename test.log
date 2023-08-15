@@ -1,0 +1,532 @@
+2023-08-15T10:30:27.567+0800	INFO	run node with args: http://127.0.0.1:2379 -1 dfec05e4ec8eb6e53b7eb9314579b6be node.b6bae128b3c8f27fc482a5bfe94c906f
+
+2023-08-15T10:30:27.626+0800	INFO	start worker( b6bae128b3c8f27fc482a5bfe94c906f ) with: [] => [b6bae128b3c8f27fc482a5bfe94c906f.out] cloudflow/examples/golang.read_data
+
+2023-08-15T10:30:27.740+0800	INFO	start read  8060  words
+
+2023-08-15T10:30:33.499+0800	INFO	read  8060  words complet2023-08-15T10:30:40.150+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.153+0800	INFO	gigasort-Session-1  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.153+0800	INFO	flush err, file is using: gigasort-Session-1
+
+2023-08-15T10:30:40.154+0800	INFO	exists key  0 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.157+0800	INFO	0  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.157+0800	INFO	flush err, file is using: 0
+
+2023-08-15T10:30:40.158+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.162+0800	INFO	0  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.162+0800	INFO	flush err, file is using: 0
+
+2023-08-15T10:30:40.164+0800	INFO	exists key  1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.168+0800	INFO	1  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.168+0800	INFO	flush err, file is using: 1
+
+2023-08-15T10:30:40.169+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.171+0800	INFO	1  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.171+0800	INFO	flush err, file is using: 1
+
+2023-08-15T10:30:40.173+0800	INFO	exists key  2 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.177+0800	INFO	2  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.177+0800	INFO	flush err, file is using: 2
+
+2023-08-15T10:30:40.179+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.181+0800	INFO	2  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.182+0800	INFO	flush err, file is using: 2
+
+2023-08-15T10:30:40.184+0800	INFO	exists key  3 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.188+0800	INFO	3  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.188+0800	INFO	flush err, file is using: 3
+
+2023-08-15T10:30:40.189+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.192+0800	INFO	3  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.192+0800	INFO	flush err, file is using: 3
+
+2023-08-15T10:30:40.196+0800	INFO	exists key  4 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.203+0800	INFO	4  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.203+0800	INFO	flush err, file is using: 4
+
+2023-08-15T10:30:40.204+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.207+0800	INFO	4  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.207+0800	INFO	flush err, file is using: 4
+
+2023-08-15T10:30:40.214+0800	INFO	exists key  5 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.222+0800	INFO	5  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.222+0800	INFO	flush err, file is using: 5
+
+2023-08-15T10:30:40.224+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.227+0800	INFO	5  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.227+0800	INFO	flush err, file is using: 5
+
+2023-08-15T10:30:40.231+0800	INFO	exists key  6 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.235+0800	INFO	6  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.235+0800	INFO	flush err, file is using: 6
+
+2023-08-15T10:30:40.236+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.238+0800	INFO	6  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.238+0800	INFO	flush err, file is using: 6
+
+2023-08-15T10:30:40.241+0800	INFO	exists key  7 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.249+0800	INFO	7  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.249+0800	INFO	flush err, file is using: 7
+
+2023-08-15T10:30:40.251+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.257+0800	INFO	7  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.257+0800	INFO	flush err, file is using: 7
+
+2023-08-15T10:30:40.260+0800	INFO	exists key  8 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.265+0800	INFO	8  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.265+0800	INFO	flush err, file is using: 8
+
+2023-08-15T10:30:40.266+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.268+0800	INFO	8  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.268+0800	INFO	flush err, file is using: 8
+
+2023-08-15T10:30:40.271+0800	INFO	exists key  9 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.274+0800	INFO	9  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.274+0800	INFO	flush err, file is using: 9
+
+2023-08-15T10:30:40.277+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.281+0800	INFO	9  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.281+0800	INFO	flush err, file is using: 9
+
+2023-08-15T10:30:40.287+0800	INFO	exists key  a check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.292+0800	INFO	a  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.292+0800	INFO	flush err, file is using: a
+
+2023-08-15T10:30:40.294+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.298+0800	INFO	a  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.298+0800	INFO	flush err, file is using: a
+
+2023-08-15T10:30:40.301+0800	INFO	exists key  b check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.305+0800	INFO	b  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.305+0800	INFO	flush err, file is using: b
+
+2023-08-15T10:30:40.307+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.312+0800	INFO	b  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.312+0800	INFO	flush err, file is using: b
+
+2023-08-15T10:30:40.316+0800	INFO	exists key  c check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.325+0800	INFO	c  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.325+0800	INFO	flush err, file is using: c
+
+2023-08-15T10:30:40.329+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.332+0800	INFO	c  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.332+0800	INFO	flush err, file is using: c
+
+2023-08-15T10:30:40.336+0800	INFO	exists key  d check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.340+0800	INFO	d  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.340+0800	INFO	flush err, file is using: d
+
+2023-08-15T10:30:40.343+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.348+0800	INFO	d  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.348+0800	INFO	flush err, file is using: d
+
+2023-08-15T10:30:40.353+0800	INFO	exists key  e check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.362+0800	INFO	e  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.362+0800	INFO	flush err, file is using: e
+
+2023-08-15T10:30:40.364+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.367+0800	INFO	e  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.367+0800	INFO	flush err, file is using: e
+
+2023-08-15T10:30:40.370+0800	INFO	exists key  f check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.373+0800	INFO	f  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.374+0800	INFO	flush err, file is using: f
+
+2023-08-15T10:30:40.381+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.385+0800	INFO	f  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.385+0800	INFO	flush err, file is using: f
+
+2023-08-15T10:30:40.391+0800	INFO	exists key  g check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.396+0800	INFO	g  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.396+0800	INFO	flush err, file is using: g
+
+2023-08-15T10:30:40.397+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.400+0800	INFO	g  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.400+0800	INFO	flush err, file is using: g
+
+2023-08-15T10:30:40.402+0800	INFO	exists key  h check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.407+0800	INFO	h  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.407+0800	INFO	flush err, file is using: h
+
+2023-08-15T10:30:40.411+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.415+0800	INFO	h  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.416+0800	INFO	flush err, file is using: h
+
+2023-08-15T10:30:40.422+0800	INFO	exists key  i check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.430+0800	INFO	i  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.430+0800	INFO	flush err, file is using: i
+
+2023-08-15T10:30:40.431+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.434+0800	INFO	i  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.434+0800	INFO	flush err, file is using: i
+
+2023-08-15T10:30:40.437+0800	INFO	exists key  j check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.443+0800	INFO	j  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.443+0800	INFO	flush err, file is using: j
+
+2023-08-15T10:30:40.446+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.452+0800	INFO	j  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.452+0800	INFO	flush err, file is using: j
+
+2023-08-15T10:30:40.458+0800	INFO	exists key  k check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.464+0800	INFO	k  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.464+0800	INFO	flush err, file is using: k
+
+2023-08-15T10:30:40.465+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.469+0800	INFO	k  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.469+0800	INFO	flush err, file is using: k
+
+2023-08-15T10:30:40.472+0800	INFO	exists key  l check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.479+0800	INFO	l  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.479+0800	INFO	flush err, file is using: l
+
+2023-08-15T10:30:40.483+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.488+0800	INFO	l  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.488+0800	INFO	flush err, file is using: l
+
+2023-08-15T10:30:40.491+0800	INFO	exists key  m check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.499+0800	INFO	m  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.500+0800	INFO	flush err, file is using: m
+
+2023-08-15T10:30:40.502+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.506+0800	INFO	m  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.506+0800	INFO	flush err, file is using: m
+
+2023-08-15T10:30:40.512+0800	INFO	exists key  n check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.518+0800	INFO	n  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.519+0800	INFO	flush err, file is using: n
+
+2023-08-15T10:30:40.522+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.527+0800	INFO	n  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.527+0800	INFO	flush err, file is using: n
+
+2023-08-15T10:30:40.530+0800	INFO	exists key  o check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.535+0800	INFO	o  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.535+0800	INFO	flush err, file is using: o
+
+2023-08-15T10:30:40.536+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.539+0800	INFO	o  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.539+0800	INFO	flush err, file is using: o
+
+2023-08-15T10:30:40.546+0800	INFO	exists key  p check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.554+0800	INFO	p  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.554+0800	INFO	flush err, file is using: p
+
+2023-08-15T10:30:40.556+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.559+0800	INFO	p  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.559+0800	INFO	flush err, file is using: p
+
+2023-08-15T10:30:40.562+0800	INFO	exists key  q check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.565+0800	INFO	q  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.565+0800	INFO	flush err, file is using: q
+
+2023-08-15T10:30:40.566+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.568+0800	INFO	q  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.568+0800	INFO	flush err, file is using: q
+
+2023-08-15T10:30:40.570+0800	INFO	exists key  r check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.574+0800	INFO	r  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.574+0800	INFO	flush err, file is using: r
+
+2023-08-15T10:30:40.577+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.580+0800	INFO	r  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.580+0800	INFO	flush err, file is using: r
+
+2023-08-15T10:30:40.584+0800	INFO	exists key  s check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.591+0800	INFO	s  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.591+0800	INFO	flush err, file is using: s
+
+2023-08-15T10:30:40.593+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.595+0800	INFO	s  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.595+0800	INFO	flush err, file is using: s
+
+2023-08-15T10:30:40.598+0800	INFO	exists key  t check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.601+0800	INFO	t  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.601+0800	INFO	flush err, file is using: t
+
+2023-08-15T10:30:40.602+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.604+0800	INFO	t  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.604+0800	INFO	flush err, file is using: t
+
+2023-08-15T10:30:40.607+0800	INFO	exists key  u check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.615+0800	INFO	u  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.615+0800	INFO	flush err, file is using: u
+
+2023-08-15T10:30:40.618+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.623+0800	INFO	u  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.623+0800	INFO	flush err, file is using: u
+
+2023-08-15T10:30:40.626+0800	INFO	exists key  v check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.630+0800	INFO	v  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.630+0800	INFO	flush err, file is using: v
+
+2023-08-15T10:30:40.631+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.633+0800	INFO	v  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.633+0800	INFO	flush err, file is using: v
+
+2023-08-15T10:30:40.636+0800	INFO	exists key  w check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.639+0800	INFO	w  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.640+0800	INFO	flush err, file is using: w
+
+2023-08-15T10:30:40.642+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.647+0800	INFO	w  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.647+0800	INFO	flush err, file is using: w
+
+2023-08-15T10:30:40.651+0800	INFO	exists key  x check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.658+0800	INFO	x  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.659+0800	INFO	flush err, file is using: x
+
+2023-08-15T10:30:40.660+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.663+0800	INFO	x  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.663+0800	INFO	flush err, file is using: x
+
+2023-08-15T10:30:40.666+0800	INFO	exists key  y check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.669+0800	INFO	y  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.669+0800	INFO	flush err, file is using: y
+
+2023-08-15T10:30:40.670+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.672+0800	INFO	y  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.672+0800	INFO	flush err, file is using: y
+
+2023-08-15T10:30:40.677+0800	INFO	exists key  z check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.683+0800	INFO	z  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.683+0800	INFO	flush err, file is using: z
+
+2023-08-15T10:30:40.686+0800	INFO	exists key  gigasort-Session-1 check fail , error:  nats: key not found
+
+2023-08-15T10:30:40.690+0800	INFO	z  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.690+0800	INFO	flush err, file is using: z
+
+2023-08-15T10:30:40.698+0800	INFO	gigasort-Session-1  stat is ZnJlZQ== != free
+
+2023-08-15T10:30:40.698+0800	INFO	flush err, file is using: gigasort-Session-1
+
+2023-08-15T10:30:40.780+0800	INFO	merge-cloudflow/examples/golang.merge_sort exit (recv: 16228, send: 0) cost 18s
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           2023-08-15T10:30:28.383+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 read-cloudflow/examples/golang.read_data exit (recv: 8060, send: 8060) cost 8s
+
+2023-08-15T10:30:33.588+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 read-cloudflow/examples/golang.read_data exit (recv: 8060, send: 8060) cost 6s
+
+2023-08-15T10:30:35.869+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 dispath-cloudflow/examples/golang.dispatch exit (recv: 8108, send: 8109) cost 19s
+
+2023-08-15T10:30:35.970+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 dispath-cloudflow/examples/golang.dispatch exit (recv: 8012, send: 8013) cost 17s
+
+2023-08-15T10:30:38.163+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 449, send: 450) cost 16s
+
+2023-08-15T10:30:38.167+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 446, send: 447) cost 24s
+
+2023-08-15T10:30:38.184+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 403, send: 404) cost 18s
+
+2023-08-15T10:30:38.184+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 459, send: 460) cost 12s
+
+2023-08-15T10:30:38.184+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 466, send: 467) cost 23s
+
+2023-08-15T10:30:38.184+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 456, send: 457) cost 24s
+
+2023-08-15T10:30:38.184+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 421, send: 422) cost 24s
+
+2023-08-15T10:30:38.184+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 471, send: 472) cost 14s
+
+2023-08-15T10:30:38.198+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 421, send: 422) cost 15s
+
+2023-08-15T10:30:38.203+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 457, send: 458) cost 17s
+
+2023-08-15T10:30:38.203+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 479, send: 480) cost 14s
+
+2023-08-15T10:30:38.203+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 402, send: 403) cost 20s
+
+2023-08-15T10:30:38.203+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 484, send: 485) cost 20s
+
+2023-08-15T10:30:38.204+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 449, send: 450) cost 11s
+
+2023-08-15T10:30:38.205+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 461, send: 462) cost 24s
+
+2023-08-15T10:30:38.225+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 435, send: 436) cost 22s
+
+2023-08-15T10:30:38.234+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 426, send: 427) cost 22s
+
+2023-08-15T10:30:38.234+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 470, send: 471) cost 23s
+
+2023-08-15T10:30:38.234+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 462, send: 463) cost 23s
+
+2023-08-15T10:30:38.234+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 458, send: 459) cost 19s
+
+2023-08-15T10:30:38.245+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 431, send: 432) cost 25s
+
+2023-08-15T10:30:38.246+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 472, send: 473) cost 11s
+
+2023-08-15T10:30:38.246+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 464, send: 465) cost 18s
+
+2023-08-15T10:30:38.246+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 448, send: 449) cost 13s
+
+2023-08-15T10:30:38.246+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 430, send: 431) cost 19s
+
+2023-08-15T10:30:38.246+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 462, send: 463) cost 17s
+
+2023-08-15T10:30:38.246+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 454, send: 455) cost 18s
+
+2023-08-15T10:30:38.246+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 439, send: 440) cost 13s
+
+2023-08-15T10:30:38.258+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 465, send: 466) cost 15s
+
+2023-08-15T10:30:38.258+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 435, send: 436) cost 12s
+
+2023-08-15T10:30:38.259+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 421, send: 422) cost 17s
+
+2023-08-15T10:30:38.259+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 452, send: 453) cost 25s
+
+2023-08-15T10:30:38.278+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 473, send: 474) cost 14s
+
+2023-08-15T10:30:38.279+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 449, send: 450) cost 21s
+
+2023-08-15T10:30:38.280+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 468, send: 469) cost 19s
+
+2023-08-15T10:30:38.280+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 sort-cloudflow/examples/golang.insert_sort exit (recv: 454, send: 455) cost 22s
+
+2023-08-15T10:30:40.781+0800	INFO	ce5aaa8e4e6708f6848195bceed55b02 merge-cloudflow/examples/golang.merge_sort exit (recv: 16228, send: 0) cost 18s
+

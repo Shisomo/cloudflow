@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// kv operator
 type KVOp interface {
 	Get(key string) interface{}
 	Set(key string, value interface{}) bool
@@ -18,6 +19,7 @@ type KVOp interface {
 	Scope() string
 }
 
+// 获取kv operator实例，通过cfg中imp字段确定是etcd还是redis
 func GetKVOpImp(cfg map[string]interface{}) KVOp {
 	imp := cfg["imp"].(string)
 	switch imp {
@@ -27,6 +29,18 @@ func GetKVOpImp(cfg map[string]interface{}) KVOp {
 		scop := cfg["scope"].(string)
 		conn := strings.Split(cf.MakeEtcdUrl(host, port), ",")
 		return NewEtcDOps(conn, scop)
+	case "redis":
+		host := cfg["host"].(string)
+		port := cfg["port"]
+		scop := cfg["scope"].(string)
+		conn := cf.MakeRedisUrl(host, port)
+		return NewRedisKVOp(conn, scop)
+	case "nats":
+		host := cfg["host"].(string)
+		port := cfg["port"]
+		scop := cfg["scope"].(string)
+		conn := cf.MakeNatsUrl(host, port)
+		return NewNatsKVOps(conn, scop)
 	default:
 		cf.Assert(false, "KV %s not support", imp)
 	}

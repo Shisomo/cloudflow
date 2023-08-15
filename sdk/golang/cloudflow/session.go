@@ -37,6 +37,7 @@ func (se *Session) CreateFlow(name string) *Flow {
 }
 func (se *Session) InitSessionStorageOps(scope string, cfg cf.CFG) {
 	// nats message's init
+	cfg["scope"] = scope
 	se.storageOps = NewStorage(scope, &cfg)
 }
 func (se *Session) GetStorageOps() StorageOps {

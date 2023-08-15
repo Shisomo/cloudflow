@@ -2,7 +2,6 @@ package fileops
 
 import (
 	cf "cloudflow/sdk/golang/cloudflow/comm"
-	"fmt"
 
 	"github.com/nats-io/nats.go"
 )
@@ -37,7 +36,7 @@ func (self *FileOpsNats) List() []string {
 func (self *FileOpsNats) Exists(key string) bool {
 	_, err := self.getKV().Get(key)
 	if err != nil {
-		cf.Log("exists key (%s) check fail , error:", err)
+		cf.Log("exists key ", key, "check fail , error: ", err)
 		return false
 	}
 	return true
@@ -72,7 +71,6 @@ func (self *FileOpsNats) Put(key string, file_path string) bool {
 func (self *FileOpsNats) Get(key string, target_path string) bool {
 	object := self.getObject()
 	val, err := self.getKV().Get(key)
-	fmt.Println(string(val.Value()))
 	if err != nil {
 		lis, _ := self.getObject().List()
 		for _, v := range lis {
@@ -129,6 +127,7 @@ func NewFileOpsNats(cnn_url string, scope string) *FileOpsNats {
 	nc, err := nats.Connect(cnn_url)
 	cf.Assert(err == nil, "connet Nats error: %s", err)
 	js, err := nc.JetStream()
+	cf.Assert(err == nil, "connet Nats jet stream error: %s", err)
 	return &FileOpsNats{
 		connurl: cnn_url,
 		nc:      nc,
