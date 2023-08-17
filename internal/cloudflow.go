@@ -36,6 +36,8 @@ func (self *CloudFlow) ConnectMsg(scope ...string) {
 		cfg := cf.GetCfgC(self.cfg, cf.CFG_KEY_SRV_MESSAGE)
 		if len(scope) > 0 {
 			cfg["app_id"] = scope[0]
+		} else {
+			cfg["app_id"] = scope
 		}
 		self.MsgOps = chops.GetChOpsImp(cfg)
 	}
