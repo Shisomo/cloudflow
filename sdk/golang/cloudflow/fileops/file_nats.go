@@ -100,7 +100,7 @@ func (self *FileOpsNats) getObject() nats.ObjectStore {
 		Storage:     nats.FileStorage,
 		Replicas:    1,
 		Placement:   &nats.Placement{Cluster: "default"},
-		MaxBytes:    int64(10e9),
+		MaxBytes:    int64(10e10),
 	})
 	cf.Assert(err == nil, "create ObjectStore(%s) error: %s", self.scope, err)
 	return newobj

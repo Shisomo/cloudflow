@@ -13,6 +13,7 @@ type RunInterface interface {
 	SetSubIdx(idx int)
 	SetKVOps(ops kvops.KVOp)
 	SetMsgOps(ops chops.ChannelOp)
+	SetStorageOps(ops StorageOps)
 	SetFileOps(ops fileops.FileOps)
 	MsgLog(a ...interface{})
 	MsgLogf(fmt string, a ...interface{})

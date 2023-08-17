@@ -103,7 +103,8 @@ func (app *App) runNode() {
 	ins.SetFileOps(fileops)
 	// session storage's init
 	// TBD: 初始化改为由node: ins 的flow的session进行初始化
-	app.Sess[0].InitSessionStorageOps(app.Sess[0].Name, ch_cfg)
+	storageops := NewStorage(app.Sess[0], &ch_cfg)
+	ins.SetStorageOps(storageops)
 	// run node
 	msg_index := ins.Run()
 	// update task state

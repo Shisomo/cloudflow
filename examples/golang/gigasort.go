@@ -144,8 +144,12 @@ func Main_GigaSort(args ...string) {
 	//
 
 	// 首先添加文件生成的100_000個通过add readdata
-	flw.Add(read_data, "read", 8060, cf.OpInsCount(2)).Add(dispatch, "dispath", 0,
-		cf.OpOutType(comm.NODE_OUYPE_MUT), cf.OpDispatchSize(len(txtbook)), cf.OpInsCount(2)).Dispatch(insert_sort,
+	// flw.Add(read_data, "read", 8060000, cf.OpInsCount(2)).Add(dispatch, "dispath", 0,
+	// 	cf.OpOutType(comm.NODE_OUYPE_MUT), cf.OpDispatchSize(len(txtbook)), cf.OpInsCount(2)).Dispatch(insert_sort,
+	// 	"sort", len(txtbook), txtbook).Add(merge_sort, "merge")
+	// test
+	flw.Add(read_data, "read", 8060, cf.OpInsCount(1)).Add(dispatch, "dispath", 0,
+		cf.OpOutType(comm.NODE_OUYPE_MUT), cf.OpDispatchSize(len(txtbook)), cf.OpInsCount(15)).Dispatch(insert_sort,
 		"sort", len(txtbook), txtbook).Add(merge_sort, "merge")
 	app.Run()
 }

@@ -35,11 +35,7 @@ func NewSession(app *App, name string) *Session {
 func (se *Session) CreateFlow(name string) *Flow {
 	return NewFlow(se, name)
 }
-func (se *Session) InitSessionStorageOps(scope string, cfg cf.CFG) {
-	// nats message's init
-	cfg["scope"] = scope
-	se.storageOps = NewStorage(scope, &cfg)
-}
+
 func (se *Session) GetStorageOps() StorageOps {
 	return se.storageOps
 }

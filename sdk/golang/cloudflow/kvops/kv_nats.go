@@ -47,6 +47,7 @@ func (ops *NatsKVOp) Get(key string) interface{} {
 	// }
 	val, err := ops.getKV().Get(ops.scope + "." + key)
 	cf.Assert(err == nil, "get key(%s) error:%s", key, err)
+
 	return cf.FrJson(cf.Base64De(string(val.Value())))
 
 }

@@ -91,7 +91,7 @@ func EnableLog() {
 // 以下要优化
 
 func Info(args ...interface{}) {
-	cfLogger.Info(fmt.Sprintln(args...))
+	cfLogger.Info(fmt.Sprintf("%s", args...))
 	// logger.Output(2, fmt.Sprintln(args...))
 }
 
@@ -107,7 +107,7 @@ func Log(args ...interface{}) {
 	if !enable_log {
 		return
 	}
-	cfLogger.Info(fmt.Sprintln(args...))
+	cfLogger.Info(fmt.Sprintf("%s", args...))
 
 	// logger.Output(2, fmt.Sprintln(args...))
 }

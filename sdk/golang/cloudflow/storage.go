@@ -27,25 +27,28 @@ type StorageOps interface {
 	Scope() string
 }
 
-func NewStorage(scope string, root_cfg *cf.CFG, ops ...interface{}) StorageOps {
+func NewStorage(session *Session, root_cfg *cf.CFG, ops ...interface{}) StorageOps {
 	// TBD
+	scope := session.Name
 	fileOps := fileops.GetFileOps(scope, *root_cfg)
+	(*root_cfg)["scope"] = scope
 	kvOps := kvops.GetKVOpImp(*root_cfg)
 	return &Storage{
-		scope: scope,
-		kv:    kvOps,
-		file:  fileOps,
+		scope:   scope,
+		kv:      kvOps,
+		file:    fileOps,
+		Session: session,
 	}
 
 }
 
 type Storage struct {
-	ID    string
-	scope string
-	// session
-	// app
-	kv   kvops.KVOp
-	file fileops.FileOps
+	ID      string
+	scope   string
+	Session *Session
+	kv      kvops.KVOp
+	file    fileops.FileOps
+
 	cf.CommStat
 }
 
@@ -114,12 +117,13 @@ func (storage *Storage) FileOpen(filename string) bytes.Buffer {
 		cf.Info("file open failed: session %s file storage not exist\n", storage.scope)
 		return *buffer
 	}
-	// 判断文件是否存在于本地, 不存在的话创建本地文件，并返回buffer用于文件操作
+	// 判断文件是否存在, 不存在的话创建本地文件，并返回buffer用于文件操作
 	if !storage.FileExists(filename) {
 		storage.unlock(filename)
 		f, err := os.Create(filename)
 		comm.Assert(err == nil, "Create Temp file %s fail:%s", f.Name(), err)
 		storage.fileFlush(filename)
+		storage.KvSet(cf.DotS(storage.Session.Uuid, storage.scope, filename, "owner"), cf.STORAGE_FILE_STAT_OPEN)
 		// 设置文件状态
 		return *buffer
 	}
@@ -192,14 +196,7 @@ func (storage *Storage) Scope() string {
 }
 
 func (storage *Storage) isFileUsing(filename string) bool {
-
-	if storage.KvGet(cf.DotS(filename, "stat")) != cf.STORAGE_FILE_STAT_FREE {
-		cf.Info(filename, " stat is", storage.KvGet(cf.DotS(filename, "stat")), "!= free")
-		return true
-	}
-	cf.Info(filename, " stat is", storage.KvGet(cf.DotS(filename, "stat")), "= free")
-
-	return false
+	return storage.KvGet(cf.DotS(filename, "lock")) != cf.STORAGE_FILE_STAT_OPEN
 }
 
 // time
@@ -207,8 +204,8 @@ func (storage *Storage) isFileUsing(filename string) bool {
 //
 // value map
 func (storage *Storage) lock(filename string) {
-	storage.KvSet(cf.DotS(filename, "stat"), []byte(cf.STORAGE_FILE_STAT_ONWRITING))
+	storage.KvSet(cf.DotS(storage.Session.Uuid, storage.scope, filename, "lock"), cf.STORAGE_FILE_STAT_OPEN)
 }
 func (storage *Storage) unlock(filename string) {
-	storage.KvSet(cf.DotS(filename, "stat"), []byte(cf.STORAGE_FILE_STAT_FREE))
+	storage.KvSet(cf.DotS(storage.Session.Uuid, storage.scope, filename, "lock"), cf.STORAGE_FILE_STAT_CLOSE)
 }

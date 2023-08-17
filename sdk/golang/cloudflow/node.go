@@ -322,6 +322,9 @@ func (node *Node) SetSubIdx(idx int) {
 func (node *Node) SetKVOps(ops kvops.KVOp) {
 	node.kvOps = ops
 }
+func (node *Node) SetStorageOps(ops StorageOps) {
+	node.Flow.Sess.storageOps = ops
+}
 
 func (node *Node) FuncName() string {
 	return cf.FuncName(node.Func)

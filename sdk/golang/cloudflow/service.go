@@ -202,6 +202,10 @@ func (srv *Service) SetFileOps(ops fileops.FileOps) {
 	srv.fileOps = ops
 }
 
+func (srv *Service) SetStorageOps(ops StorageOps) {
+	srv.App.Sess[0].storageOps = ops
+}
+
 func (self *Service) Run() int64 {
 	chs_i, chs_o := self.InOutChs()
 	cf.Log("start Server(", self.Uuid, ") with:", chs_i, "=>", chs_o, self.FuncName())
