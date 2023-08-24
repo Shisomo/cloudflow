@@ -17,8 +17,8 @@ func StartWorker(cfg cf.CFG, fcfg cf.CFG, ops kvops.KVOp) {
 }
 
 func TryStartWorker(worker_cfg cf.CFG, fileops_cfg cf.CFG, ops kvops.KVOp) {
-	sche := cfmodule.ListKeys(ops, cf.K_CF_WORKERS, cf.K_STAT_WORK)
-	if len(sche) < 1 {
+	wokr := cfmodule.ListKeys(ops, cf.K_CF_WORKERS, cf.K_STAT_WORK)
+	if len(wokr) < 1 {
 		cf.Log("no workers find, create new one")
 		StartWorker(worker_cfg, fileops_cfg, ops)
 	}

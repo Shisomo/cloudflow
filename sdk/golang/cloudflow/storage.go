@@ -27,7 +27,8 @@ type StorageOps interface {
 	Scope() string
 }
 
-func NewStorage(session *Session, root_cfg *cf.CFG, ops ...interface{}) StorageOps {
+// NewStorage 用于创建存储操作对象
+func NewStorage(session *Session, root_cfg *cf.CFG, r RunInterface, ops ...interface{}) StorageOps {
 	// TBD
 	scope := session.Name
 	fileOps := fileops.GetFileOps(scope, *root_cfg)
@@ -38,6 +39,7 @@ func NewStorage(session *Session, root_cfg *cf.CFG, ops ...interface{}) StorageO
 		kv:      kvOps,
 		file:    fileOps,
 		Session: session,
+		Node:    r,
 	}
 
 }
@@ -48,7 +50,7 @@ type Storage struct {
 	Session *Session
 	kv      kvops.KVOp
 	file    fileops.FileOps
-
+	Node    RunInterface
 	cf.CommStat
 }
 
@@ -123,7 +125,7 @@ func (storage *Storage) FileOpen(filename string) bytes.Buffer {
 		f, err := os.Create(filename)
 		comm.Assert(err == nil, "Create Temp file %s fail:%s", f.Name(), err)
 		storage.fileFlush(filename)
-		storage.KvSet(cf.DotS(storage.Session.Uuid, storage.scope, filename, "owner"), cf.STORAGE_FILE_STAT_OPEN)
+		storage.KvSet(cf.DotS(storage.scope, filename, "owner"), storage.Session.Name)
 		// 设置文件状态
 		return *buffer
 	}
@@ -196,7 +198,7 @@ func (storage *Storage) Scope() string {
 }
 
 func (storage *Storage) isFileUsing(filename string) bool {
-	return storage.KvGet(cf.DotS(filename, "lock")) != cf.STORAGE_FILE_STAT_OPEN
+	return storage.KvGet(cf.DotS(storage.scope, filename, "lock", "stat")) != cf.STORAGE_FILE_STAT_OPEN
 }
 
 // time
@@ -204,8 +206,10 @@ func (storage *Storage) isFileUsing(filename string) bool {
 //
 // value map
 func (storage *Storage) lock(filename string) {
-	storage.KvSet(cf.DotS(storage.Session.Uuid, storage.scope, filename, "lock"), cf.STORAGE_FILE_STAT_OPEN)
+	storage.KvSet(cf.DotS(storage.scope, filename, "lock", "stat"), cf.STORAGE_FILE_STAT_CLOSE)
+	storage.KvSet(cf.DotS(storage.scope, filename, "lock", "owner"), storage.Node.UUID())
 }
 func (storage *Storage) unlock(filename string) {
-	storage.KvSet(cf.DotS(storage.Session.Uuid, storage.scope, filename, "lock"), cf.STORAGE_FILE_STAT_CLOSE)
+	storage.KvSet(cf.DotS(storage.scope, filename, "lock", "stat"), cf.STORAGE_FILE_STAT_OPEN)
+	storage.KvSet(cf.DotS(storage.scope, filename, "lock", "owner"), "")
 }

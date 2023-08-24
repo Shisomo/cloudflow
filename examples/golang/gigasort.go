@@ -149,7 +149,7 @@ func Main_GigaSort(args ...string) {
 	// 	"sort", len(txtbook), txtbook).Add(merge_sort, "merge")
 	// test
 	flw.Add(read_data, "read", 806000, cf.OpInsCount(1)).Add(dispatch, "dispath", 0,
-		cf.OpOutType(comm.NODE_OUYPE_MUT), cf.OpDispatchSize(len(txtbook)), cf.OpInsCount(15)).Dispatch(insert_sort,
+		cf.OpOutType(comm.NODE_OUYPE_MUT), cf.OpDispatchSize(len(txtbook)), cf.OpInsCount(1)).Dispatch(insert_sort,
 		"sort", len(txtbook), txtbook).Add(merge_sort, "merge")
 	app.Run()
 }

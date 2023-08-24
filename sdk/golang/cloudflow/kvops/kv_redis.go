@@ -3,6 +3,7 @@ package kvops
 import (
 	cf "cloudflow/sdk/golang/cloudflow/comm"
 	"context"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -30,6 +31,16 @@ func NewRedisKVOp(connUrls string, scope string) *RedisKVOp {
 	}
 }
 func (ops *RedisKVOp) Get(key string) interface{} {
+	// 模糊查询
+	if strings.Contains(key, "*") {
+		ret := map[string]interface{}{}
+		keys, _ := ops.rc.Keys(ops.ctx, key).Result()
+		for _, k := range keys {
+			v, _ := ops.rc.Get(ops.ctx, k).Result()
+			ret[k] = v
+		}
+		return ret
+	}
 	ret, err := ops.rc.Get(ops.ctx, key).Result()
 	cf.Assert(err == nil, "get key(%s) error:%s", key, err)
 	return ret

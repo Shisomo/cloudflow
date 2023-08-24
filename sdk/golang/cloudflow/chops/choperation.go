@@ -21,7 +21,11 @@ func GetChOpsImp(cfg cf.CFG) ChannelOp {
 	case "nats":
 		host := cfg["host"].(string)
 		port := cfg["port"]
-		stream_name := cfg["app_id"].(string)
+		//初始化避免后续报错
+		stream_name, ok := cfg["app_id"].(string)
+		if !ok {
+			stream_name = "app_id"
+		}
 		return NewNatsChOp(cf.MakeNatsUrl(host, port), stream_name)
 	default:
 		cf.Assert(false, "%s ChOPs not supported", imp)

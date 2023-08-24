@@ -12,6 +12,8 @@ cf:
     port: 4222
   kvstore:
     imp: redis
+    host: 127.0.0.1
+    port: 6379
   message:
     imp: nats
     host: 127.0.0.1

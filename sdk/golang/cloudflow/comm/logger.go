@@ -2,7 +2,7 @@ package comm
 
 import (
 	"fmt"
-	"io"
+	"log"
 	"os"
 	"runtime/debug"
 
@@ -10,8 +10,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// var flags = log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile
-// var logger = log.New(os.Stderr, "cloudflow:", flags)
+var flags = log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile
+var logger = log.New(os.Stderr, "cloudflow:", flags)
 var enable_log = true
 
 const (
@@ -28,18 +28,20 @@ type CFLogger struct {
 	atomicLevel *zap.AtomicLevel
 }
 
-func NewCFLogger(out io.Writer, level zapcore.Level) *CFLogger {
+func NewCFLogger(level zapcore.Level) *CFLogger {
 	encoderCfg := zap.NewProductionEncoderConfig()
 	encoderCfg.EncodeTime = zapcore.ISO8601TimeEncoder
 	encoderCfg.EncodeLevel = zapcore.CapitalLevelEncoder
 	atomicLevel := zap.NewAtomicLevelAt(level)
-	logFile, _ := os.Create("./test.log")
-	// 利用io.MultiWriter支持文件和终端两个输出目标
-	writerSyncer := io.MultiWriter(logFile, out)
+	// 文件和stderr双输出
+	file, _ := os.OpenFile("./test.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm)
+	syncFile := zapcore.AddSync(file)
+	syncConsole := zapcore.AddSync(os.Stderr)
+	writerSyncer := zapcore.NewMultiWriteSyncer(syncConsole, syncFile)
 	return &CFLogger{
 		zapLogger: zap.New(
 			zapcore.NewCore(
-				zapcore.NewConsoleEncoder(encoderCfg), zapcore.AddSync(writerSyncer), atomicLevel,
+				zapcore.NewConsoleEncoder(encoderCfg), writerSyncer, atomicLevel,
 			),
 		),
 		atomicLevel: &atomicLevel,
@@ -79,7 +81,7 @@ func (cflogger *CFLogger) Sync() error {
 	return cflogger.zapLogger.Sync()
 }
 
-var cfLogger = NewCFLogger(os.Stderr, InfoLevel)
+var cfLogger = NewCFLogger(InfoLevel)
 
 func DisableLog() {
 	enable_log = false
@@ -91,8 +93,8 @@ func EnableLog() {
 // 以下要优化
 
 func Info(args ...interface{}) {
-	cfLogger.Info(fmt.Sprintf("%s", args...))
-	// logger.Output(2, fmt.Sprintln(args...))
+	cfLogger.Info(fmt.Sprintln(args...))
+	logger.Output(2, fmt.Sprintln(args...))
 }
 
 func Debug(args ...interface{}) {
@@ -107,7 +109,7 @@ func Log(args ...interface{}) {
 	if !enable_log {
 		return
 	}
-	cfLogger.Info(fmt.Sprintf("%s", args...))
+	cfLogger.Info(fmt.Sprintln(args...))
 
 	// logger.Output(2, fmt.Sprintln(args...))
 }
