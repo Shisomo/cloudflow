@@ -2,7 +2,6 @@ package comm
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"runtime/debug"
 
@@ -10,8 +9,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var flags = log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile
-var logger = log.New(os.Stderr, "cloudflow:", flags)
+// var flags = log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile
+// var logger = log.New(os.Stderr, "cloudflow:", flags)
 var enable_log = true
 
 const (
@@ -94,7 +93,7 @@ func EnableLog() {
 
 func Info(args ...interface{}) {
 	cfLogger.Info(fmt.Sprintln(args...))
-	logger.Output(2, fmt.Sprintln(args...))
+	// logger.Output(2, fmt.Sprintln(args...))
 }
 
 func Debug(args ...interface{}) {
@@ -109,7 +108,7 @@ func Log(args ...interface{}) {
 	if !enable_log {
 		return
 	}
-	cfLogger.Info(fmt.Sprintln(args...))
+	cfLogger.Info(fmt.Sprintf("%v", args...))
 
 	// logger.Output(2, fmt.Sprintln(args...))
 }

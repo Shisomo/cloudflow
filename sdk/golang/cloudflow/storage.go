@@ -123,6 +123,7 @@ func (storage *Storage) FileOpen(filename string) bytes.Buffer {
 	if !storage.FileExists(filename) {
 		storage.unlock(filename)
 		f, err := os.Create(filename)
+		storage.KvSet(cf.DotS(storage.scope, filename, "lock", "Count"), "0")
 		comm.Assert(err == nil, "Create Temp file %s fail:%s", f.Name(), err)
 		storage.fileFlush(filename)
 		storage.KvSet(cf.DotS(storage.scope, filename, "owner"), storage.Session.Name)
@@ -205,11 +206,19 @@ func (storage *Storage) isFileUsing(filename string) bool {
 // owner
 //
 // value map
+
 func (storage *Storage) lock(filename string) {
 	storage.KvSet(cf.DotS(storage.scope, filename, "lock", "stat"), cf.STORAGE_FILE_STAT_CLOSE)
 	storage.KvSet(cf.DotS(storage.scope, filename, "lock", "owner"), storage.Node.UUID())
+	Count := storage.KvGet(cf.DotS(storage.scope, filename, "lock", "Count")).(string)
+	a := cf.Stoi(Count)
+	a += 1
+	storage.KvSet(cf.DotS(storage.scope, filename, "lock", "Count"), cf.Itos(a))
+
 }
 func (storage *Storage) unlock(filename string) {
 	storage.KvSet(cf.DotS(storage.scope, filename, "lock", "stat"), cf.STORAGE_FILE_STAT_OPEN)
 	storage.KvSet(cf.DotS(storage.scope, filename, "lock", "owner"), "")
+	storage.KvSet(cf.DotS(storage.scope, filename, "lock", "whoac"), storage.Node.UUID())
+	storage.KvSet(cf.DotS(storage.scope, filename, "lock", "atime"), cf.TimestampStr())
 }

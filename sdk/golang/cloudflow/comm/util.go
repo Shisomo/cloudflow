@@ -70,6 +70,11 @@ func Itos(a int) string {
 	return strconv.Itoa(a)
 }
 
+func Stoi(a string) int {
+	res, _ := strconv.Atoi(a)
+	return res
+}
+
 func I64tos(a int64) string {
 	return strconv.FormatInt(a, 10)
 }

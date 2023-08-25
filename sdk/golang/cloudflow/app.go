@@ -229,6 +229,15 @@ func (app *App) Run() {
 	}
 	cmd := exec.Command("bash", opts...)
 	cf.Log("*************cloudflow output*************")
+	cf.Log("    ___  __      ___    _   _   ___ ")
+	cf.Log("  / ___| | |    / _ \\  | | | | |  _ \\")
+	cf.Log(" | |___  | |__ | |_| | | |_| | | |_| |")
+	cf.Log("  \\____| |____| \\___/   \\___/  |___ /")
+	cf.Log("   _____    _         ____     _    _")
+	cf.Log("  | ____|  | |       / __ \\   | |  | |")
+	cf.Log("  | |__    | |      | |  | |  | |  | |")
+	cf.Log("  | ___|   | |___   | |__| |  | |/\\| |")
+	cf.Log("  |_|      |_____|   \\____/   |__/\\__|")
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	err := cmd.Start()

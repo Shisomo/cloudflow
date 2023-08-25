@@ -45,9 +45,7 @@ func (wk *DumyWorker) RunTask(tsk task.Task) {
 	// change task stat
 	cf.Log("run task:", tsk.Uuid_key)
 	task.UpdateStat(wk.Kvops, tsk, cf.K_STAT_STAR, wk.Uuid)
-	// 先改一下
-	worker_dir, err := os.MkdirTemp("/home/ysj/tmp/", tsk.Uuid_key+".*")
-	// worker_dir, err := os.MkdirTemp("/tmp/", tsk.Uuid_key+".*")
+	worker_dir, err := os.MkdirTemp("/tmp/", tsk.Uuid_key+".*")
 
 	cf.Assert(err == nil, "Create Temp dir fail:%s", err)
 	defer os.RemoveAll(worker_dir)

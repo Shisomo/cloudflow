@@ -22,35 +22,11 @@ type NatsKVOp struct {
 // todo: 补充（*匹配符）模糊查询逻辑
 func (ops *NatsKVOp) Get(key string) interface{} {
 	// TBD 匹配查询
-	// prefix := strings.Contains(key, "*")
-	// var e error
-	// if prefix {
-	// 	key = strings.Replace(key, "*", "", -1)
-	// 	val, err := ops.getKV().Get(ops.scope+"."+key)
-	// } else {
-	// 	val, err := ops.getKV().Get(ops.scope+"."+key)
-	// }
-	// if e != nil {
-	// 	cf.Err("read key fail", e)
-	// 	return nil
-	// }
-	// if len(val.Kvs) < 1 {
-	// 	return nil
-	// }
-	// if prefix {
-	// 	ret := map[string]interface{}{}
-	// 	for _, v := range v.Kvs {
-	// 		ret[strings.Replace(string(v.Key),
-	// 			ops.scope+".", "", 1)] = cf.FrJson(cf.Base64De(string(v.Value)))
-	// 	}
-	// 	return ret
-	// }
 	val, err := ops.getKV().Get(ops.scope + "." + key)
 	cf.Assert(err == nil, "get key(%s) error:%s", key, err)
-
 	return cf.FrJson(cf.Base64De(string(val.Value())))
-
 }
+
 func (ops *NatsKVOp) Set(key string, value interface{}) bool {
 	cf.Assert(!strings.Contains(key, "|"), "'|' can not in key")
 
@@ -61,6 +37,7 @@ func (ops *NatsKVOp) Set(key string, value interface{}) bool {
 	}
 	return true
 }
+
 func (ops *NatsKVOp) Del(key string) bool {
 	err := ops.getKV().Delete(key)
 	if err != nil {
@@ -69,6 +46,7 @@ func (ops *NatsKVOp) Del(key string) bool {
 	}
 	return true
 }
+
 func (ops *NatsKVOp) SetKV(Kv map[string]interface{}, ignore_empty bool) bool {
 	for k, v := range Kv {
 		if ignore_empty {
@@ -90,6 +68,7 @@ func (ops *NatsKVOp) SetKV(Kv map[string]interface{}, ignore_empty bool) bool {
 	}
 	return true
 }
+
 func (ops *NatsKVOp) GetKs(Kv []string, ignore_empty bool) map[string]interface{} {
 	ret := map[string]interface{}{}
 	for _, k := range Kv {
@@ -114,15 +93,19 @@ func (ops *NatsKVOp) GetKs(Kv []string, ignore_empty bool) map[string]interface{
 	}
 	return ret
 }
+
 func (ops *NatsKVOp) Host() string {
 	return ""
 }
+
 func (ops *NatsKVOp) Port() int {
 	return -1
 }
+
 func (ops *NatsKVOp) Imp() string {
 	return "nats"
 }
+
 func (ops *NatsKVOp) Scope() string {
 	return ops.scope
 }
